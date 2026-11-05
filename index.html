@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>DorukTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--y:#ff1e1e;--bg:#0b0b0b;--card:#111;--tx:#fff;--mut:#bbb}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--y);font-family:'Lexend',sans-serif;color:var(--tx);min-height:100vh}
+button,input,textarea,select{font-family:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:8px}
+header{position:sticky;top:0;z-index:10;background:var(--bg);border:3px solid var(--y);outline:6px solid var(--y);border-radius:22px;margin-bottom:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-weight:800;font-size:20px;color:var(--y);cursor:pointer;display:flex;align-items:center;gap:6px}
+.hr{display:flex;gap:6px;align-items:center}
+.pill{background:var(--bg);color:var(--y);border:2px solid var(--y);border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;cursor:pointer}
+.pill.fill{background:var(--y);color:#fff;font-weight:800}
+.pill.round{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+main{background:var(--bg);border:3px solid var(--y);border-radius:22px;padding:14px;min-height:60vh}
+h2{color:var(--y);font-size:18px;margin:14px 0 10px}
+.search{width:100%;background:#000;border:2px solid var(--y);color:#fff;border-radius:999px;padding:10px 16px;margin-bottom:10px;outline:none}
+.vcard{margin-bottom:16px;cursor:pointer}
+.thumb{width:100%;aspect-ratio:16/9;border:3px solid var(--y);border-radius:18px;background:#777 center/cover no-repeat;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.thumb .play{width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:var(--y);font-size:24px}
+.vt{font-weight:800;font-size:14px;margin:8px 2px 2px;color:var(--y);text-transform:none}
+.vu{font-size:11px;font-weight:600;margin:0 2px;color:var(--y)}
+.vm{font-size:11px;color:var(--mut);margin:0 2px}
+.shorts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shorts .thumb{aspect-ratio:9/16}
+video.player{width:100%;max-height:70vh;border:3px solid var(--y);border-radius:18px;background:#000}
+.vhead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-top:12px}
+.vhead h1{margin:0;font-size:19px;color:var(--y)}
+.vhead small{font-weight:800}
+.desc{display:none;margin-top:12px;border:3px solid var(--y);border-radius:18px;padding:12px 14px;font-size:13px;white-space:pre-wrap}
+.desc.open{display:block}
+.row{display:flex;align-items:center;justify-content:space-between;margin:14px 0;gap:8px}
+.who{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--y);font-size:16px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--y);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;border:3px solid #8a0000}
+.lk{display:flex;border:3px solid var(--y);border-radius:999px;overflow:hidden}
+.lk button{background:transparent;border:0;color:var(--y);font-weight:800;padding:8px 14px;font-size:13px;cursor:pointer}
+.lk button+button{border-left:3px solid var(--y)}
+.lk button.on{background:var(--y);color:#fff}
+.cin{display:flex;gap:10px;align-items:flex-end;margin:10px 0 16px}
+.cin input{flex:1;background:transparent;border:0;border-bottom:3px solid var(--y);color:#fff;padding:8px 2px;outline:none;font-size:14px}
+.cm{border-bottom:1px solid #333;padding:8px 0;font-size:13px}
+.cm b{color:var(--y)}
+.cm .x{float:right;color:#f66;cursor:pointer;font-size:12px}
+.form{display:flex;flex-direction:column;gap:12px}
+.form input[type=text],.form input[type=password],.form textarea{background:#000;border:2px solid var(--y);color:#fff;border-radius:14px;padding:12px;outline:none;font-size:14px;width:100%}
+.form label{font-size:13px;color:var(--y);font-weight:600}
+.form .chk{display:flex;gap:8px;align-items:center}
+.msg{font-size:13px;color:#ff8a8a;min-height:18px}
+.msg.ok{color:#8aff9a}
+.empty{color:var(--mut);text-align:center;padding:30px 0;font-size:14px}
+.hint{font-size:12px;color:var(--mut)}
+.prog{height:8px;background:#333;border-radius:8px;overflow:hidden;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--y);transition:width .2s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" onclick="go('home')">🎬 DorukTube</div>
+    <div class="hr" id="hr"></div>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://wawkbelprkrhfyngcaei.supabase.co";
+const SUPABASE_KEY = "sb_publishable_tquuOepSjSv6sGn9-esPlg_80qCTMo9";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const FAKE_DOMAIN = "@doruktube.app";
+
+let me = null;      // auth user
+let myName = null;  // kullanıcı adı
+let route = {page:'home'};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const emailOf = u => u.toLowerCase() + FAKE_DOMAIN;
+
+function setUser(u){ me = u || null; myName = u?.user_metadata?.username || null; header(); }
+
+function header(){
+  const h = $('#hr');
+  if(me){
+    h.innerHTML = `<button class="pill fill" onclick="go('upload')">＋ Yükle</button>
+      <button class="pill" onclick="logout()">@${esc(myName)} ⎋</button>`;
+  } else {
+    h.innerHTML = `<button class="pill fill" onclick="go('auth')">Giriş / Kayıt</button>`;
+  }
+  if(route.page !== 'home'){
+    h.insertAdjacentHTML('afterbegin', `<button class="pill round" onclick="go('home')">‹</button>`);
+  }
+}
+
+function go(page, id){ route = {page, id}; header(); render(); window.scrollTo(0,0); }
+
+async function render(){
+  const app = $('#app');
+  if(route.page==='home') return home(app);
+  if(route.page==='video') return videoPage(app, route.id);
+  if(route.page==='auth') return authPage(app);
+  if(route.page==='upload') return uploadPage(app);
+}
+
+/* ---------- Kart ---------- */
+function card(v){
+  const bg = v.thumb_url ? `style="background-image:url('${esc(v.thumb_url)}')"` : '';
+  const play = v.thumb_url ? '' : '<div class="play">▶</div>';
+  return `<div class="vcard" onclick="go('video',${v.id})">
+    <div class="thumb" ${bg}>${play}</div>
+    <div class="vt">${esc(v.title)}</div>
+    <div class="vu">@${esc(v.username)}</div>
+    <div class="vm">${v.views} izlenme</div></div>`;
+}
+
+/* ---------- Ana sayfa ---------- */
+let allVideos = [];
+async function home(app){
+  app.innerHTML = '<div class="empty">Yükleniyor...</div>';
+  const {data, error} = await sb.from('videos').select('*').order('created_at',{ascending:false}).limit(100);
+  if(error){ app.innerHTML = `<div class="empty">Hata: ${esc(error.message)}<br><span class="hint">SQL kodunu çalıştırdın mı?</span></div>`; return; }
+  allVideos = data || [];
+  app.innerHTML = `<input class="search" id="q" placeholder="🔍 Ara...">
+    <div id="list"></div>`;
+  $('#q').oninput = e => list(e.target.value);
+  list('');
+}
+function list(q){
+  q = q.trim().toLowerCase();
+  const f = allVideos.filter(v => !q || v.title.toLowerCase().includes(q) || v.username.toLowerCase().includes(q));
+  const vids = f.filter(v=>!v.is_short), sh = f.filter(v=>v.is_short);
+  $('#list').innerHTML = `<h2>Videolar</h2>` +
+    (vids.length ? vids.map(card).join('') : '<div class="empty">Henüz video yok.</div>') +
+    (sh.length ? `<h2>Shortlar</h2><div class="shorts">${sh.map(card).join('')}</div>` : '');
+}
+
+/* ---------- Video sayfası ---------- */
+async function videoPage(app, id){
+  app.innerHTML = '<div class="empty">Yükleniyor...</div>';
+  const {data:v, error} = await sb.from('videos').select('*').eq('id',id).single();
+  if(error || !v){ app.innerHTML = '<div class="empty">Video bulunamadı.</div>'; return; }
+  sb.rpc('increment_views',{vid:id});
+  v.views = (v.views||0)+1;
+
+  const [{data:likes},{data:comments},{data:others}] = await Promise.all([
+    sb.from('likes').select('user_id,value').eq('video_id',id),
+    sb.from('comments').select('*').eq('video_id',id).order('created_at',{ascending:false}),
+    sb.from('videos').select('*').neq('id',id).order('created_at',{ascending:false}).limit(10)
+  ]);
+
+  app.innerHTML = `
+    <video class="player" src="${esc(v.video_url)}" poster="${esc(v.thumb_url||'')}" controls playsinline></video>
+    <div class="vhead">
+      <div><h1>${esc(v.title)}</h1><small>İzlenme: ${v.views}</small></div>
+      <button class="pill fill" onclick="document.getElementById('d').classList.toggle('open')">Açıklama</button>
+    </div>
+    <div class="desc" id="d">${esc(v.description||'Açıklama yok.')}${v.topic?`\n\nKonu: ${esc(v.topic)}`:''}</div>
+    <div class="row">
+      <div class="who"><div class="av">${esc(v.username[0].toUpperCase())}</div>@${esc(v.username)}</div>
+      <div class="lk" id="lk"></div>
+    </div>
+    <h2 id="ch"></h2>
+    <div class="cin"><input id="ci" maxlength="500" placeholder="Yorum yaz..."><button class="pill" onclick="sendComment(${id})">Gönder</button></div>
+    <div id="cl"></div>
+    <h2>Diğer videolar:</h2>
+    ${(others||[]).map(card).join('') || '<div class="empty">Başka video yok.</div>'}
+  `;
+  window._likes = likes || [];
+  drawLikes(id);
+  window._comments = comments || [];
+  drawComments(id);
+}
+
+function drawLikes(id){
+  const L = window._likes;
+  const up = L.filter(x=>x.value===1).length, dn = L.filter(x=>x.value===-1).length;
+  const mine = me ? (L.find(x=>x.user_id===me.id)?.value || 0) : 0;
+  $('#lk').innerHTML = `<button class="${mine===1?'on':''}" onclick="vote(${id},1)">👍 Like ${up}</button>
+    <button class="${mine===-1?'on':''}" onclick="vote(${id},-1)">👎 Dislike ${dn}</button>`;
+}
+async function vote(id, val){
+  if(!me){ alert('Önce giriş yapmalısın.'); return go('auth'); }
+  const L = window._likes;
+  const cur = L.find(x=>x.user_id===me.id);
+  if(cur && cur.value===val){
+    await sb.from('likes').delete().eq('video_id',id).eq('user_id',me.id);
+    window._likes = L.filter(x=>x.user_id!==me.id);
+  } else {
+    const {error} = await sb.from('likes').upsert({video_id:id,user_id:me.id,value:val},{onConflict:'video_id,user_id'});
+    if(error) return alert(error.message);
+    window._likes = L.filter(x=>x.user_id!==me.id).concat({user_id:me.id,value:val});
+  }
+  drawLikes(id);
+}
+
+function drawComments(id){
+  const C = window._comments;
+  $('#ch').textContent = `Yorumlar (${C.length})`;
+  $('#cl').innerHTML = C.map(c => `<div class="cm">
+    ${me && c.user_id===me.id ? `<span class="x" onclick="delComment(${c.id},${id})">sil</span>`:''}
+    <b>@${esc(c.username)}</b><br>${esc(c.content)}</div>`).join('');
+}
+async function sendComment(id){
+  if(!me){ alert('Yorum için giriş yapmalısın.'); return go('auth'); }
+  const t = $('#ci').value.trim(); if(!t) return;
+  const {data,error} = await sb.from('comments').insert({video_id:id,user_id:me.id,username:myName,content:t}).select().single();
+  if(error) return alert(error.message);
+  window._comments.unshift(data); $('#ci').value=''; drawComments(id);
+}
+async function delComment(cid,id){
+  await sb.from('comments').delete().eq('id',cid);
+  window._comments = window._comments.filter(c=>c.id!==cid); drawComments(id);
+}
+
+/* ---------- Giriş / Kayıt (kullanıcı adı ile) ---------- */
+function authPage(app){
+  app.innerHTML = `<h2>Giriş Yap / Kayıt Ol</h2>
+  <div class="form">
+    <label>Kullanıcı adı (3-20 karakter: harf, rakam, _)</label>
+    <input type="text" id="un" autocapitalize="none" autocomplete="username">
+    <label>Şifre (en az 6 karakter)</label>
+    <input type="password" id="pw" autocomplete="current-password">
+    <div class="msg" id="msg"></div>
+    <div style="display:flex;gap:10px">
+      <button class="pill fill" style="flex:1;padding:12px" onclick="login()">Giriş Yap</button>
+      <button class="pill" style="flex:1;padding:12px" onclick="register()">Kayıt Ol</button>
+    </div>
+  </div>`;
+}
+function readAuth(){
+  const u = $('#un').value.trim(), p = $('#pw').value;
+  if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ msg('Kullanıcı adı 3-20 karakter olmalı (harf, rakam, _).'); return null; }
+  if(p.length<6){ msg('Şifre en az 6 karakter olmalı.'); return null; }
+  return {u,p};
+}
+function msg(t,ok){ const m=$('#msg'); m.textContent=t; m.className='msg'+(ok?' ok':''); }
+async function register(){
+  const a = readAuth(); if(!a) return;
+  msg('Kayıt yapılıyor...',true);
+  const {data,error} = await sb.auth.signUp({email:emailOf(a.u),password:a.p,options:{data:{username:a.u}}});
+  if(error){
+    msg(/already|registered|Database error/i.test(error.message) ? 'Bu kullanıcı adı alınmış.' : error.message); return;
+  }
+  if(!data.session){ msg('Kayıt oldu ama oturum açılmadı. Supabase\'de "Confirm email" kapalı olmalı.'); return; }
+  go('home');
+}
+async function login(){
+  const a = readAuth(); if(!a) return;
+  msg('Giriş yapılıyor...',true);
+  const {error} = await sb.auth.signInWithPassword({email:emailOf(a.u),password:a.p});
+  if(error){ msg('Kullanıcı adı veya şifre hatalı.'); return; }
+  go('home');
+}
+async function logout(){ if(confirm('Çıkış yapılsın mı?')){ await sb.auth.signOut(); go('home'); } }
+
+/* ---------- Video yükleme ---------- */
+function uploadPage(app){
+  if(!me){ return authPage(app); }
+  app.innerHTML = `<h2>Video Yükle</h2>
+  <div class="form">
+    <label>Video dosyası</label>
+    <input type="file" id="vf" accept="video/*" style="color:#fff">
+    <label>Başlık</label><input type="text" id="vt" maxlength="100">
+    <label>Konu</label><input type="text" id="vc" maxlength="60" placeholder="Örn: Team Fortress 2">
+    <label>Açıklama</label><textarea id="vd" rows="4" maxlength="1000"></textarea>
+    <div class="chk"><input type="checkbox" id="vs"><label for="vs">Bu bir Short (dikey video)</label></div>
+    <div class="hint">Not: Supabase ücretsiz planda dosya başına limit 50 MB.</div>
+    <div class="prog" id="pr"><i id="pb"></i></div>
+    <div class="msg" id="msg"></div>
+    <button class="pill fill" style="padding:12px" id="ub" onclick="upload()">Yükle</button>
+  </div>`;
+}
+function makeThumb(file){
+  return new Promise(res=>{
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.src = url;
+    const done = b => { URL.revokeObjectURL(url); res(b); };
+    v.onerror = () => done(null);
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration||1)/2); };
+    v.onseeked = () => {
+      const c = document.createElement('canvas');
+      const w = Math.min(640, v.videoWidth||640);
+      c.width = w; c.height = Math.round(w * (v.videoHeight||360) / (v.videoWidth||640));
+      c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      c.toBlob(b=>done(b),'image/jpeg',0.8);
+    };
+    setTimeout(()=>done(null),10000);
+  });
+}
+async function upload(){
+  const f = $('#vf').files[0], title = $('#vt').value.trim();
+  if(!f) return msg('Bir video seç.');
+  if(!title) return msg('Başlık yaz.');
+  if(f.size > 50*1024*1024) return msg('Dosya 50 MB\'dan büyük.');
+  $('#ub').disabled = true; $('#pr').style.display='block'; $('#pb').style.width='20%';
+  msg('Yükleniyor...',true);
+  try{
+    const stamp = Date.now();
+    const ext = (f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const vpath = `${me.id}/${stamp}.${ext}`;
+    const {error:e1} = await sb.storage.from('videos').upload(vpath,f,{contentType:f.type||'video/mp4'});
+    if(e1) throw e1;
+    $('#pb').style.width='70%';
+    let thumb_url = null;
+    const tb = await makeThumb(f);
+    if(tb){
+      const tpath = `${me.id}/${stamp}_thumb.jpg`;
+      const {error:e2} = await sb.storage.from('videos').upload(tpath,tb,{contentType:'image/jpeg'});
+      if(!e2) thumb_url = sb.storage.from('videos').getPublicUrl(tpath).data.publicUrl;
+    }
+    const video_url = sb.storage.from('videos').getPublicUrl(vpath).data.publicUrl;
+    const {data,error:e3} = await sb.from('videos').insert({
+      user_id:me.id, username:myName, title, description:$('#vd').value.trim(),
+      topic:$('#vc').value.trim(), video_url, thumb_url, is_short:$('#vs').checked
+    }).select().single();
+    if(e3) throw e3;
+    $('#pb').style.width='100%';
+    go('video', data.id);
+  }catch(err){
+    msg('Hata: '+(err.message||err)); $('#ub').disabled=false;
+  }
+}
+
+/* ---------- Başlat ---------- */
+(async()=>{
+  const {data:{session}} = await sb.auth.getSession();
+  setUser(session?.user);
+  sb.auth.onAuthStateChange((_e,s)=>setUser(s?.user));
+  render();
+})();
+</script>
+</body>
+</html>
