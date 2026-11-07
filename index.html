@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e12">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>DorukTube</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0e0e12; --surface:#17171d; --surface2:#1f1f27; --line:rgba(255,255,255,.08);
+  --tx:#f4f4f6; --mut:#9a9aa8; --red:#ff2d3d; --red2:#ff6a3d;
+  --grad:linear-gradient(135deg,#ff2d3d,#ff6a3d);
+  --r:18px; --nav:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Lexend',system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(900px 400px at 85% -10%,rgba(255,45,61,.14),transparent 60%),radial-gradient(700px 400px at -10% 10%,rgba(255,106,61,.08),transparent 60%);
+  background-attachment:fixed}
+button,input,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer;border:0}
+a{color:inherit}
+
+/* Header */
+header{position:sticky;top:0;z-index:50;background:rgba(14,14,18,.72);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hin{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:20px;cursor:pointer;letter-spacing:-.3px;white-space:nowrap}
+.logo img{width:34px;height:34px;border-radius:10px;box-shadow:0 4px 16px rgba(255,45,61,.35)}
+.logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sbox{flex:1;max-width:520px;margin:0 auto;position:relative}
+.sbox input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:11px 16px 11px 42px;outline:none;font-size:14px;transition:.2s}
+.sbox input:focus{border-color:rgba(255,45,61,.6);box-shadow:0 0 0 4px rgba(255,45,61,.12)}
+.sbox svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mut)}
+.hr{display:flex;gap:8px;align-items:center;position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-weight:500;font-size:13.5px;transition:.2s;white-space:nowrap}
+.btn:hover{background:#2a2a34;transform:translateY(-1px)}
+.btn.pri{background:var(--grad);border:0;font-weight:600;box-shadow:0 6px 20px rgba(255,45,61,.3)}
+.btn.pri:hover{filter:brightness(1.1);box-shadow:0 8px 26px rgba(255,45,61,.45)}
+.btn:disabled{opacity:.55;pointer-events:none}
+.btn svg{width:17px;height:17px}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex:none}
+.menu{position:absolute;right:0;top:46px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;display:none;box-shadow:0 16px 40px rgba(0,0,0,.5)}
+.menu.open{display:block}
+.menu div{padding:10px 12px;border-radius:10px;font-size:13.5px;cursor:pointer}
+.menu div:hover{background:var(--surface2)}
+.menu .nm{color:var(--mut);cursor:default;font-size:12px}
+.menu .nm:hover{background:none}
+
+/* Layout */
+.wrap{max-width:1280px;margin:0 auto;padding:18px 16px calc(var(--nav) + 30px)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:18px;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--mut);transition:.2s;white-space:nowrap}
+.chip.on{background:var(--tx);color:#000;border-color:var(--tx)}
+.chip:not(.on):hover{color:var(--tx);background:var(--surface2)}
+h2.sec{font-size:18px;font-weight:600;margin:6px 0 14px;display:flex;align-items:center;gap:8px}
+h2.sec i{width:4px;height:18px;border-radius:4px;background:var(--grad);display:inline-block}
+
+/* Video grid */
+.grid{display:grid;grid-template-columns:1fr;gap:22px 18px}
+@media(min-width:620px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1240px){.grid{grid-template-columns:repeat(4,1fr)}}
+.vcard{cursor:pointer;animation:up .4s both}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.thumb{position:relative;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;background:var(--surface2) center/cover no-repeat;transition:.25s;box-shadow:0 0 0 1px var(--line)}
+.vcard:hover .thumb{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 1px rgba(255,45,61,.5)}
+.thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:.25s;background:linear-gradient(transparent 40%,rgba(0,0,0,.55))}
+.vcard:hover .play,.thumb.noimg .play{opacity:1}
+.play span{width:52px;height:52px;border-radius:50%;background:rgba(255,45,61,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(255,45,61,.5)}
+.play svg{width:22px;height:22px;margin-left:3px}
+.vinfo{display:flex;gap:11px;margin-top:11px}
+.vtxt{min-width:0}
+.vt{font-weight:600;font-size:14.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vm{font-size:12.5px;color:var(--mut);margin-top:3px}
+.vm b{font-weight:500}
+
+/* Shorts */
+.shorts{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;margin-bottom:22px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.shorts::-webkit-scrollbar{display:none}
+.scard{flex:none;width:158px;scroll-snap-align:start;cursor:pointer;animation:up .4s both}
+.scard .thumb{aspect-ratio:9/16;border-radius:16px}
+@media(min-width:620px){.scard{width:190px}}
+
+/* Skeleton */
+.sk .thumb{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+.sk .l{height:12px;border-radius:6px;margin-top:10px;background:var(--surface)}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Video page */
+.watch{display:grid;grid-template-columns:1fr;gap:22px}
+@media(min-width:1000px){.watch{grid-template-columns:minmax(0,1fr) 380px}}
+video.player{width:100%;max-height:72vh;background:#000;border-radius:var(--r);display:block;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.wt{font-size:20px;font-weight:600;margin:16px 0 6px;line-height:1.3}
+.wmeta{color:var(--mut);font-size:13px}
+.wbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
+.who{display:flex;align-items:center;gap:10px;font-weight:600}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.lk{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lk button{background:transparent;padding:9px 16px;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:7px;transition:.2s}
+.lk button+button{border-left:1px solid var(--line)}
+.lk button:hover{background:#2a2a34}
+.lk button.on{background:var(--grad);font-weight:600}
+.lk svg{width:17px;height:17px}
+.desc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+.desc .tp{display:inline-block;background:rgba(255,45,61,.15);color:#ff7a85;border-radius:999px;padding:3px 11px;font-size:12px;margin-bottom:8px;font-weight:500}
+.comm h3{font-size:16px;margin:22px 0 12px}
+.cin{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+.cin input{flex:1;background:transparent;border:0;border-bottom:2px solid var(--line);padding:10px 2px;outline:none;font-size:14px;transition:.2s}
+.cin input:focus{border-color:var(--red)}
+.cm{display:flex;gap:12px;padding:10px 0;animation:up .3s both}
+.cm .avatar{width:34px;height:34px;font-size:14px}
+.cm .b{font-size:13.5px;line-height:1.5;flex:1;min-width:0;word-break:break-word}
+.cm .b small{color:var(--mut);margin-left:6px}
+.cm .b b{font-weight:600}
+.cm .x{color:#ff7a85;font-size:12px;background:none;padding:4px 8px;border-radius:8px}
+.cm .x:hover{background:rgba(255,45,61,.12)}
+.side h3{font-size:16px;margin:0 0 14px}
+.rel{display:flex;gap:12px;margin-bottom:14px;cursor:pointer}
+.rel .thumb{width:160px;flex:none;border-radius:12px}
+.rel .vt{font-size:13.5px}
+
+/* Forms */
+.panel{max-width:460px;margin:30px auto;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:28px 24px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.panel.wide{max-width:600px}
+.panel h2{margin:0 0 4px;font-size:22px}
+.panel p.sub{color:var(--mut);font-size:13px;margin:0 0 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--mut);margin-bottom:6px;font-weight:500}
+.field input[type=text],.field input[type=password],.field textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;font-size:14px;transition:.2s;resize:vertical}
+.field input:focus,.field textarea:focus{border-color:rgba(255,45,61,.6);box-shadow:0 0 0 4px rgba(255,45,61,.12)}
+.drop{display:block;border:2px dashed rgba(255,255,255,.16);border-radius:16px;padding:28px 14px;text-align:center;cursor:pointer;transition:.2s;font-size:13.5px;color:var(--mut)}
+.drop:hover,.drop.over{border-color:var(--red);background:rgba(255,45,61,.06);color:var(--tx)}
+.drop svg{width:34px;height:34px;color:var(--red);margin-bottom:6px}
+.drop input{display:none}
+.drop b{display:block;color:var(--tx);word-break:break-all}
+.row2{display:flex;gap:10px}
+.row2 .btn{flex:1;padding:13px}
+.sw{display:flex;align-items:center;gap:10px;font-size:13.5px;margin:6px 0 14px;cursor:pointer}
+.sw input{accent-color:var(--red);width:18px;height:18px}
+.prog{height:6px;background:var(--surface2);border-radius:6px;overflow:hidden;margin:8px 0;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--grad);transition:width .3s}
+.hint{font-size:12px;color:var(--mut)}
+.msg{font-size:13px;color:#ff8a93;min-height:20px;margin-bottom:8px}
+.msg.ok{color:#7dffa0}
+.empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:14px}
+.empty .big{font-size:42px;margin-bottom:8px}
+
+/* Bottom nav (mobil) */
+nav.bn{position:fixed;left:0;right:0;bottom:0;z-index:60;height:calc(var(--nav) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(14,14,18,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
+nav.bn button{background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--mut);padding:6px 18px;transition:.2s}
+nav.bn button.on{color:var(--tx)}
+nav.bn svg{width:22px;height:22px}
+nav.bn .plus{width:46px;height:46px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 20px rgba(255,45,61,.45);margin-top:-14px}
+nav.bn .plus svg{width:24px;height:24px}
+@media(min-width:760px){nav.bn{display:none}.wrap{padding-bottom:40px}}
+@media(max-width:759px){.hdesk{display:none}.sbox{margin:0}.logo span{display:none}}
+
+/* Toast */
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav) + 24px);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+@media(min-width:760px){#toasts{bottom:30px}}
+.toast{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 18px;font-size:13.5px;box-shadow:0 14px 40px rgba(0,0,0,.5);animation:up .25s both}
+.toast.err{border-color:rgba(255,45,61,.6)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hin">
+    <div class="logo" onclick="go('home')"><img src="icon-192.png" alt=""><span>Doruk<b>Tube</b></span></div>
+    <div class="sbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Video veya kullanıcı ara" autocomplete="off">
+    </div>
+    <div class="hr" id="hr"></div>
+  </div>
+</header>
+
+<div class="wrap"><main id="app"></main></div>
+
+<nav class="bn" id="bn"></nav>
+<div id="toasts"></div>
+
+<script>
+const SUPABASE_URL = "https://wawkbelprkrhfyngcaei.supabase.co";
+const SUPABASE_KEY = "sb_publishable_tquuOepSjSv6sGn9-esPlg_80qCTMo9";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const FAKE_DOMAIN = "@doruktube.app";
+
+let me = null, myName = null;
+let route = {page:'home'};
+let allVideos = [], filter = 'all', query = '';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const emailOf = u => u.toLowerCase() + FAKE_DOMAIN;
+
+/* ---------- İkonlar ---------- */
+const I = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M7 4v16l14-8z"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9zM7 11l4-8c2 0 3 1 3 3v3h5.5a2 2 0 0 1 2 2.3l-1.2 7a2 2 0 0 1-2 1.7H7"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3v9zM17 13l-4 8c-2 0-3-1-3-3v-3H4.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 5.700 5H17"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>'
+};
+
+/* ---------- Yardımcılar ---------- */
+function toast(t, err){
+  const d = document.createElement('div'); d.className = 'toast' + (err?' err':''); d.textContent = t;
+  $('#toasts').appendChild(d); setTimeout(()=>d.remove(), 3200);
+}
+function ago(ts){
+  const s = Math.max(1, (Date.now() - new Date(ts)) / 1000);
+  const u = [[31536000,'yıl'],[2592000,'ay'],[604800,'hafta'],[86400,'gün'],[3600,'saat'],[60,'dk']];
+  for(const [n,l] of u) if(s >= n) return Math.floor(s/n) + ' ' + l + ' önce';
+  return 'az önce';
+}
+function hue(name){ let h = 0; for(const c of String(name)) h = (h*31 + c.charCodeAt(0)) % 360; return h; }
+function av(name, cls=''){
+  const h = hue(name);
+  return `<div class="avatar ${cls}" style="background:linear-gradient(135deg,hsl(${h} 80% 55%),hsl(${(h+40)%360} 80% 45%))">${esc(String(name)[0]?.toUpperCase()||'?')}</div>`;
+}
+const fmt = n => n >= 1e6 ? (n/1e6).toFixed(1)+' Mn' : n >= 1e3 ? (n/1e3).toFixed(1)+' B' : String(n);
+
+/* ---------- Oturum / Header ---------- */
+function setUser(u){ me = u || null; myName = u?.user_metadata?.username || null; header(); }
+
+function header(){
+  const h = $('#hr');
+  if(me){
+    h.innerHTML = `<button class="btn pri hdesk" onclick="go('upload')">${I.plus} Yükle</button>
+      <div onclick="event.stopPropagation();document.getElementById('mn').classList.toggle('open')" style="cursor:pointer">${av(myName)}</div>
+      <div class="menu" id="mn"><div class="nm">@${esc(myName)} olarak giriş yapıldı</div><div onclick="logout()">Çıkış yap</div></div>`;
+  } else {
+    h.innerHTML = `<button class="btn pri" onclick="go('auth')">Giriş yap</button>`;
+  }
+  bottomNav();
+}
+document.addEventListener('click', () => $('#mn')?.classList.remove('open'));
+
+function bottomNav(){
+  const p = route.page;
+  $('#bn').innerHTML = `
+    <button class="${p==='home'?'on':''}" onclick="go('home')">${I.home}Ana sayfa</button>
+    <button onclick="go('upload')"><span class="plus">${I.plus}</span></button>
+    <button class="${p==='auth'?'on':''}" onclick="${me?'toggleMenuMobile()':"go('auth')"}">${I.user}${me?'@'+esc(myName):'Giriş'}</button>`;
+}
+function toggleMenuMobile(){ if(confirm('@'+myName+' hesabından çıkış yapılsın mı?')) logout(); }
+
+/* ---------- Yönlendirme (hash) ---------- */
+function parseHash(){
+  const h = location.hash.replace(/^#\/?/, '').split('/');
+  if(h[0]==='video' && h[1]) return {page:'video', id:+h[1]};
+  if(['auth','upload'].includes(h[0])) return {page:h[0]};
+  return {page:'home'};
+}
+function go(page, id){
+  const target = '#/' + (page==='home' ? '' : page + (id ? '/' + id : ''));
+  if(location.hash === target || (page==='home' && !location.hash)){ route = {page,id}; header(); render(); window.scrollTo(0,0); }
+  else location.hash = target;
+}
+window.addEventListener('hashchange', () => { route = parseHash(); header(); render(); window.scrollTo(0,0); });
+
+async function render(){
+  const app = $('#app');
+  if(route.page==='home') return home(app);
+  if(route.page==='video') return videoPage(app, route.id);
+  if(route.page==='auth') return authPage(app);
+  if(route.page==='upload') return uploadPage(app);
+}
+
+$('#q').addEventListener('input', e => { query = e.target.value; if(route.page!=='home') go('home'); else list(); });
+
+/* ---------- Kartlar ---------- */
+function thumbHtml(v){
+  const bg = v.thumb_url ? `style="background-image:url('${esc(v.thumb_url)}')"` : '';
+  return `<div class="thumb ${v.thumb_url?'':'noimg'}" ${bg}><div class="play"><span>${I.play}</span></div></div>`;
+}
+function card(v, i=0){
+  return `<div class="vcard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('video',${v.id})">
+    ${thumbHtml(v)}
+    <div class="vinfo">${av(v.username)}<div class="vtxt">
+      <div class="vt">${esc(v.title)}</div>
+      <div class="vm">@${esc(v.username)}<br>${fmt(v.views||0)} izlenme · ${ago(v.created_at)}</div>
+    </div></div></div>`;
+}
+function scard(v, i=0){
+  return `<div class="scard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('video',${v.id})">
+    ${thumbHtml(v)}
+    <div class="vt" style="margin-top:9px;font-size:13.5px">${esc(v.title)}</div>
+    <div class="vm">@${esc(v.username)} · ${fmt(v.views||0)}</div></div>`;
+}
+function skeleton(n=8){
+  return `<div class="grid">${Array(n).fill('<div class="sk"><div class="thumb"></div><div class="l" style="width:85%"></div><div class="l" style="width:50%"></div></div>').join('')}</div>`;
+}
+
+/* ---------- Ana sayfa ---------- */
+async function home(app){
+  if(!allVideos.length) app.innerHTML = skeleton();
+  const {data, error} = await sb.from('videos').select('*').order('created_at',{ascending:false}).limit(150);
+  if(route.page!=='home') return;
+  if(error){ app.innerHTML = `<div class="empty"><div class="big">⚠️</div>Hata: ${esc(error.message)}<br><span class="hint">SQL kodunu çalıştırdın mı?</span></div>`; return; }
+  allVideos = data || [];
+  app.innerHTML = `<div class="chips" id="chips"></div><div id="list"></div>`;
+  list();
+}
+function list(){
+  const chips = $('#chips'); if(!chips) return;
+  chips.innerHTML = [['all','Tümü'],['video','Videolar'],['short','Shortlar']].map(([k,l]) =>
+    `<button class="chip ${filter===k?'on':''}" onclick="filter='${k}';list()">${l}</button>`).join('');
+  const q = query.trim().toLowerCase();
+  const f = allVideos.filter(v => !q || v.title.toLowerCase().includes(q) || v.username.toLowerCase().includes(q) || (v.topic||'').toLowerCase().includes(q));
+  const vids = f.filter(v=>!v.is_short), sh = f.filter(v=>v.is_short);
+  let h = '';
+  if(filter!=='video' && sh.length) h += `<h2 class="sec"><i></i>Shortlar</h2><div class="shorts">${sh.map(scard).join('')}</div>`;
+  if(filter!=='short' && vids.length) h += `<h2 class="sec"><i></i>Videolar</h2><div class="grid">${vids.map(card).join('')}</div>`;
+  if(!h) h = `<div class="empty"><div class="big">🎬</div>${q ? 'Aramanla eşleşen video yok.' : 'Henüz video yok. İlk yükleyen sen ol!'}</div>`;
+  $('#list').innerHTML = h;
+}
+
+/* ---------- Video sayfası ---------- */
+async function videoPage(app, id){
+  app.innerHTML = skeleton(1);
+  const {data:v, error} = await sb.from('videos').select('*').eq('id',id).single();
+  if(route.page!=='video' || route.id!==id) return;
+  if(error || !v){ app.innerHTML = '<div class="empty"><div class="big">🕳️</div>Video bulunamadı.</div>'; return; }
+  sb.rpc('increment_views',{vid:id}).then(()=>{});
+  v.views = (v.views||0) + 1;
+
+  const [{data:likes},{data:comments},{data:others}] = await Promise.all([
+    sb.from('likes').select('user_id,value').eq('video_id',id),
+    sb.from('comments').select('*').eq('video_id',id).order('created_at',{ascending:false}),
+    sb.from('videos').select('*').neq('id',id).order('created_at',{ascending:false}).limit(12)
+  ]);
+  if(route.page!=='video' || route.id!==id) return;
+
+  app.innerHTML = `<div class="watch">
+    <div>
+      <video class="player" src="${esc(v.video_url)}" poster="${esc(v.thumb_url||'')}" controls playsinline autoplay></video>
+      <h1 class="wt">${esc(v.title)}</h1>
+      <div class="wmeta">${fmt(v.views)} izlenme · ${ago(v.created_at)}</div>
+      <div class="wbar">
+        <div class="who">${av(v.username)}@${esc(v.username)}</div>
+        <div class="acts"><div class="lk" id="lk"></div>
+          <button class="btn" onclick="share('${esc(v.title).replace(/'/g,'')}')">${I.share} Paylaş</button></div>
+      </div>
+      <div class="desc">${v.topic?`<span class="tp">${esc(v.topic)}</span><br>`:''}${esc(v.description||'Açıklama yok.')}</div>
+      <div class="comm">
+        <h3 id="ch"></h3>
+        <div class="cin"><input id="ci" maxlength="500" placeholder="Yorum ekle..."><button class="btn pri" onclick="sendComment(${id})">Gönder</button></div>
+        <div id="cl"></div>
+      </div>
+    </div>
+    <aside class="side"><h3>Diğer videolar</h3>
+      ${(others||[]).map(o=>`<div class="rel" onclick="go('video',${o.id})">${thumbHtml(o)}<div class="vtxt"><div class="vt">${esc(o.title)}</div><div class="vm">@${esc(o.username)}<br>${fmt(o.views||0)} izlenme</div></div></div>`).join('') || '<div class="hint">Başka video yok.</div>'}
+    </aside></div>`;
+  $('#ci').addEventListener('keydown', e => { if(e.key==='Enter') sendComment(id); });
+  window._likes = likes || []; drawLikes(id);
+  window._comments = comments || []; drawComments(id);
+}
+async function share(t){
+  const url = location.href;
+  try{ if(navigator.share){ await navigator.share({title:t,url}); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(url); toast('Link kopyalandı'); }catch(e){ toast(url); }
+}
+function drawLikes(id){
+  const L = window._likes;
+  const up = L.filter(x=>x.value===1).length, dn = L.filter(x=>x.value===-1).length;
+  const mine = me ? (L.find(x=>x.user_id===me.id)?.value || 0) : 0;
+  $('#lk').innerHTML = `<button class="${mine===1?'on':''}" onclick="vote(${id},1)">${I.up} ${up}</button>
+    <button class="${mine===-1?'on':''}" onclick="vote(${id},-1)">${I.down} ${dn}</button>`;
+}
+async function vote(id, val){
+  if(!me){ toast('Önce giriş yapmalısın.', true); return go('auth'); }
+  const L = window._likes, cur = L.find(x=>x.user_id===me.id);
+  if(cur && cur.value===val){
+    await sb.from('likes').delete().eq('video_id',id).eq('user_id',me.id);
+    window._likes = L.filter(x=>x.user_id!==me.id);
+  } else {
+    const {error} = await sb.from('likes').upsert({video_id:id,user_id:me.id,value:val},{onConflict:'video_id,user_id'});
+    if(error) return toast(error.message, true);
+    window._likes = L.filter(x=>x.user_id!==me.id).concat({user_id:me.id,value:val});
+  }
+  drawLikes(id);
+}
+function drawComments(id){
+  const C = window._comments;
+  $('#ch').textContent = `${C.length} yorum`;
+  $('#cl').innerHTML = C.length ? C.map(c => `<div class="cm">${av(c.username)}
+    <div class="b"><b>@${esc(c.username)}</b><small>${ago(c.created_at)}</small><br>${esc(c.content)}</div>
+    ${me && c.user_id===me.id ? `<button class="x" onclick="delComment(${c.id},${id})">Sil</button>`:''}</div>`).join('')
+    : '<div class="hint">İlk yorumu sen yap.</div>';
+}
+async function sendComment(id){
+  if(!me){ toast('Yorum için giriş yapmalısın.', true); return go('auth'); }
+  const t = $('#ci').value.trim(); if(!t) return;
+  const {data,error} = await sb.from('comments').insert({video_id:id,user_id:me.id,username:myName,content:t}).select().single();
+  if(error) return toast(error.message, true);
+  window._comments.unshift(data); $('#ci').value=''; drawComments(id);
+}
+async function delComment(cid,id){
+  await sb.from('comments').delete().eq('id',cid);
+  window._comments = window._comments.filter(c=>c.id!==cid); drawComments(id);
+}
+
+/* ---------- Giriş / Kayıt (kullanıcı adıyla) ---------- */
+function authPage(app){
+  app.innerHTML = `<div class="panel">
+    <h2>Hoş geldin 👋</h2><p class="sub">Kullanıcı adın ve şifrenle giriş yap ya da yeni hesap aç.</p>
+    <div class="field"><label>Kullanıcı adı</label><input type="text" id="un" autocapitalize="none" autocomplete="username" placeholder="ornek_kullanici"></div>
+    <div class="field"><label>Şifre</label><input type="password" id="pw" autocomplete="current-password" placeholder="En az 6 karakter"></div>
+    <div class="msg" id="msg"></div>
+    <div class="row2"><button class="btn pri" onclick="login()">Giriş yap</button><button class="btn" onclick="register()">Kayıt ol</button></div>
+    <p class="hint" style="margin-top:14px">Kullanıcı adı 3-20 karakter: harf, rakam ve _</p></div>`;
+  $('#pw').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+}
+function readAuth(){
+  const u = $('#un').value.trim(), p = $('#pw').value;
+  if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ msg('Kullanıcı adı 3-20 karakter olmalı (harf, rakam, _).'); return null; }
+  if(p.length<6){ msg('Şifre en az 6 karakter olmalı.'); return null; }
+  return {u,p};
+}
+function msg(t,ok){ const m=$('#msg'); if(!m) return; m.textContent=t; m.className='msg'+(ok?' ok':''); }
+async function register(){
+  const a = readAuth(); if(!a) return;
+  msg('Kayıt yapılıyor...',true);
+  const {data,error} = await sb.auth.signUp({email:emailOf(a.u),password:a.p,options:{data:{username:a.u}}});
+  if(error){ msg(/already|registered|Database error/i.test(error.message) ? 'Bu kullanıcı adı alınmış.' : error.message); return; }
+  if(!data.session){ msg('Kayıt oldu ama oturum açılmadı. Supabase\'de "Confirm email" kapalı olmalı.'); return; }
+  toast('Hoş geldin @' + a.u); go('home');
+}
+async function login(){
+  const a = readAuth(); if(!a) return;
+  msg('Giriş yapılıyor...',true);
+  const {error} = await sb.auth.signInWithPassword({email:emailOf(a.u),password:a.p});
+  if(error){ msg('Kullanıcı adı veya şifre hatalı.'); return; }
+  toast('Giriş yapıldı'); go('home');
+}
+async function logout(){ await sb.auth.signOut(); toast('Çıkış yapıldı'); go('home'); }
+
+/* ---------- Video yükleme ---------- */
+function uploadPage(app){
+  if(!me){ return authPage(app); }
+  app.innerHTML = `<div class="panel wide">
+    <h2>Video yükle</h2><p class="sub">Kapak resmi videodan otomatik alınır.</p>
+    <label class="drop" id="dz">${I.cloud}<span id="dzt">Video seç ya da buraya sürükle</span>
+      <input type="file" id="vf" accept="video/*"></label>
+    <div class="field" style="margin-top:16px"><label>Başlık</label><input type="text" id="vt" maxlength="100"></div>
+    <div class="field"><label>Konu</label><input type="text" id="vc" maxlength="60" placeholder="Örn: Team Fortress 2"></div>
+    <div class="field"><label>Açıklama</label><textarea id="vd" rows="4" maxlength="1000"></textarea></div>
+    <label class="sw"><input type="checkbox" id="vs"> Bu bir Short (dikey video)</label>
+    <div class="hint">Supabase ücretsiz planda dosya başına limit 50 MB.</div>
+    <div class="prog" id="pr"><i id="pb"></i></div>
+    <div class="msg" id="msg"></div>
+    <button class="btn pri" style="width:100%;padding:14px" id="ub" onclick="upload()">Yükle</button></div>`;
+  const dz = $('#dz'), vf = $('#vf');
+  const show = () => { const f = vf.files[0]; if(f) $('#dzt').innerHTML = `<b>${esc(f.name)}</b>${(f.size/1048576).toFixed(1)} MB`; };
+  vf.onchange = show;
+  ['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('over'); }));
+  dz.addEventListener('drop', ev => { if(ev.dataTransfer.files[0]){ vf.files = ev.dataTransfer.files; show(); } });
+}
+function makeThumb(file){
+  return new Promise(res=>{
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.src = url;
+    const done = b => { URL.revokeObjectURL(url); res(b); };
+    v.onerror = () => done(null);
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration||1)/2); };
+    v.onseeked = () => {
+      const c = document.createElement('canvas');
+      const w = Math.min(640, v.videoWidth||640);
+      c.width = w; c.height = Math.round(w * (v.videoHeight||360) / (v.videoWidth||640));
+      c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      c.toBlob(b=>done(b),'image/jpeg',0.8);
+    };
+    setTimeout(()=>done(null),10000);
+  });
+}
+async function upload(){
+  const f = $('#vf').files[0], title = $('#vt').value.trim();
+  if(!f) return msg('Bir video seç.');
+  if(!title) return msg('Başlık yaz.');
+  if(f.size > 50*1024*1024) return msg('Dosya 50 MB\'dan büyük.');
+  $('#ub').disabled = true; $('#pr').style.display='block'; $('#pb').style.width='20%';
+  msg('Yükleniyor...',true);
+  try{
+    const stamp = Date.now();
+    const ext = (f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const vpath = `${me.id}/${stamp}.${ext}`;
+    const {error:e1} = await sb.storage.from('videos').upload(vpath,f,{contentType:f.type||'video/mp4'});
+    if(e1) throw e1;
+    $('#pb').style.width='70%';
+    let thumb_url = null;
+    const tb = await makeThumb(f);
+    if(tb){
+      const tpath = `${me.id}/${stamp}_thumb.jpg`;
+      const {error:e2} = await sb.storage.from('videos').upload(tpath,tb,{contentType:'image/jpeg'});
+      if(!e2) thumb_url = sb.storage.from('videos').getPublicUrl(tpath).data.publicUrl;
+    }
+    const video_url = sb.storage.from('videos').getPublicUrl(vpath).data.publicUrl;
+    const {data,error:e3} = await sb.from('videos').insert({
+      user_id:me.id, username:myName, title, description:$('#vd').value.trim(),
+      topic:$('#vc').value.trim(), video_url, thumb_url, is_short:$('#vs').checked
+    }).select().single();
+    if(e3) throw e3;
+    $('#pb').style.width='100%';
+    allVideos = []; toast('Video yüklendi 🎉');
+    go('video', data.id);
+  }catch(err){
+    msg('Hata: '+(err.message||err)); $('#ub').disabled=false;
+  }
+}
+
+/* ---------- Başlat ---------- */
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+(async()=>{
+  route = parseHash();
+  const {data:{session}} = await sb.auth.getSession();
+  setUser(session?.user);
+  sb.auth.onAuthStateChange((_e,s)=>setUser(s?.user));
+  render();
+})();
+</script>
+</body>
+</html>
