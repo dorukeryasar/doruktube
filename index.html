@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e12">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>DorukTube</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0e0e12; --surface:#17171d; --surface2:#1f1f27; --line:rgba(255,255,255,.08);
+  --tx:#f4f4f6; --mut:#9a9aa8; --red:#ff2d3d; --red2:#ff6a3d;
+  --grad:linear-gradient(135deg,#ff2d3d,#ff6a3d);
+  --r:18px; --nav:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Lexend',system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(900px 400px at 85% -10%,rgba(255,45,61,.14),transparent 60%),radial-gradient(700px 400px at -10% 10%,rgba(255,106,61,.08),transparent 60%);
+  background-attachment:fixed}
+button,input,textarea,select{font-family:inherit;color:inherit}
+button{cursor:pointer;border:0}
+a{color:inherit}
+
+/* Header */
+header{position:sticky;top:0;z-index:50;background:rgba(14,14,18,.72);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hin{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:20px;cursor:pointer;letter-spacing:-.3px;white-space:nowrap}
+.logo img{width:34px;height:34px;border-radius:10px;box-shadow:0 4px 16px rgba(255,45,61,.35)}
+.logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sbox{flex:1;max-width:520px;margin:0 auto;position:relative}
+.sbox input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:11px 16px 11px 42px;outline:none;font-size:14px;transition:.2s}
+.sbox input:focus{border-color:rgba(255,45,61,.6);box-shadow:0 0 0 4px rgba(255,45,61,.12)}
+.sbox svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mut)}
+.hr{display:flex;gap:8px;align-items:center;position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-weight:500;font-size:13.5px;transition:.2s;white-space:nowrap}
+.btn:hover{background:#2a2a34;transform:translateY(-1px)}
+.btn.pri{background:var(--grad);border:0;font-weight:600;box-shadow:0 6px 20px rgba(255,45,61,.3)}
+.btn.pri:hover{filter:brightness(1.1);box-shadow:0 8px 26px rgba(255,45,61,.45)}
+.btn.on{background:var(--surface2);color:var(--mut)}
+.btn:disabled{opacity:.55;pointer-events:none}
+.btn svg{width:17px;height:17px}
+.ibtn{position:relative;width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:.2s}
+.ibtn:hover{background:var(--surface2)}
+.ibtn svg{width:20px;height:20px}
+.badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--grad);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 2px var(--bg)}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex:none}
+.lnk{cursor:pointer}
+.lnk:hover{text-decoration:underline}
+
+/* Layout */
+.wrap{max-width:1280px;margin:0 auto;padding:18px 16px calc(var(--nav) + 30px)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--mut);transition:.2s;white-space:nowrap}
+.chip.on{background:var(--tx);color:#000;border-color:var(--tx)}
+.chip.cat.on{background:var(--grad);color:#fff;border:0}
+.chip:not(.on):hover{color:var(--tx);background:var(--surface2)}
+h2.sec{font-size:18px;font-weight:600;margin:6px 0 14px;display:flex;align-items:center;gap:8px}
+h2.sec i{width:4px;height:18px;border-radius:4px;background:var(--grad);display:inline-block}
+
+/* Video grid */
+.grid{display:grid;grid-template-columns:1fr;gap:22px 18px}
+@media(min-width:620px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1240px){.grid{grid-template-columns:repeat(4,1fr)}}
+.vcard{cursor:pointer;animation:up .4s both}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.thumb{position:relative;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;background:var(--surface2) center/cover no-repeat;transition:.25s;box-shadow:0 0 0 1px var(--line)}
+.vcard:hover .thumb{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 1px rgba(255,45,61,.5)}
+.thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:.25s;background:linear-gradient(transparent 40%,rgba(0,0,0,.55))}
+.vcard:hover .play,.thumb.noimg .play{opacity:1}
+.play span{width:52px;height:52px;border-radius:50%;background:rgba(255,45,61,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(255,45,61,.5)}
+.play svg{width:22px;height:22px;margin-left:3px}
+.ctag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:500}
+.vinfo{display:flex;gap:11px;margin-top:11px}
+.vtxt{min-width:0}
+.vt{font-weight:600;font-size:14.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vm{font-size:12.5px;color:var(--mut);margin-top:3px}
+
+/* Shorts */
+.shorts{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;margin-bottom:22px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.shorts::-webkit-scrollbar{display:none}
+.scard{flex:none;width:158px;scroll-snap-align:start;cursor:pointer;animation:up .4s both}
+.scard .thumb{aspect-ratio:9/16;border-radius:16px}
+@media(min-width:620px){.scard{width:190px}}
+
+/* Skeleton */
+.sk .thumb{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+.sk .l{height:12px;border-radius:6px;margin-top:10px;background:var(--surface)}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Video page */
+.watch{display:grid;grid-template-columns:1fr;gap:22px}
+@media(min-width:1000px){.watch{grid-template-columns:minmax(0,1fr) 380px}}
+video.player{width:100%;max-height:72vh;background:#000;border-radius:var(--r);display:block;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.wt{font-size:20px;font-weight:600;margin:16px 0 6px;line-height:1.3}
+.wmeta{color:var(--mut);font-size:13px}
+.wbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
+.who{display:flex;align-items:center;gap:10px;font-weight:600}
+.who small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lk{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lk button{background:transparent;padding:9px 16px;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:7px;transition:.2s}
+.lk button+button{border-left:1px solid var(--line)}
+.lk button:hover{background:#2a2a34}
+.lk button.on{background:var(--grad);font-weight:600}
+.lk svg{width:17px;height:17px}
+.desc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+.desc .tp{display:inline-block;background:rgba(255,45,61,.15);color:#ff7a85;border-radius:999px;padding:3px 11px;font-size:12px;margin:0 6px 8px 0;font-weight:500}
+.comm h3{font-size:16px;margin:22px 0 12px}
+.cin{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+.cin input{flex:1;background:transparent;border:0;border-bottom:2px solid var(--line);padding:10px 2px;outline:none;font-size:14px;transition:.2s}
+.cin input:focus{border-color:var(--red)}
+.cm{display:flex;gap:12px;padding:10px 0;animation:up .3s both}
+.cm .avatar{width:34px;height:34px;font-size:14px}
+.cm .b{font-size:13.5px;line-height:1.5;flex:1;min-width:0;word-break:break-word}
+.cm .b small{color:var(--mut);margin-left:6px}
+.cm .b b{font-weight:600}
+.cm .x{color:#ff7a85;font-size:12px;background:none;padding:4px 8px;border-radius:8px}
+.cm .x:hover{background:rgba(255,45,61,.12)}
+.side h3{font-size:16px;margin:0 0 14px}
+.rel{display:flex;gap:12px;margin-bottom:14px;cursor:pointer}
+.rel .thumb{width:160px;flex:none;border-radius:12px}
+.rel .vt{font-size:13.5px}
+
+/* Kanal */
+.banner{height:150px;border-radius:var(--r);margin-bottom:-44px}
+.chead{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;padding:0 18px;margin-bottom:16px}
+.chead .avatar{width:92px;height:92px;font-size:38px;border:4px solid var(--bg)}
+.chead .ci{flex:1;min-width:180px;padding-bottom:4px}
+.chead h1{margin:0;font-size:22px}
+.chead .st{color:var(--mut);font-size:13px;margin-top:4px}
+.bio{color:#cfcfd8;font-size:13.5px;line-height:1.6;padding:0 18px;margin-bottom:18px;white-space:pre-wrap}
+.chcard{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:.2s;animation:up .4s both}
+.chcard:hover{background:var(--surface2);transform:translateY(-2px)}
+.chcard .avatar{width:56px;height:56px;font-size:22px}
+.chgrid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:620px){.chgrid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.chgrid{grid-template-columns:repeat(3,1fr)}}
+
+/* Bildirim */
+.nlist{max-width:680px;margin:0 auto}
+.nitem{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);margin-bottom:10px;cursor:pointer;transition:.2s;animation:up .3s both}
+.nitem:hover{background:var(--surface2)}
+.nitem.unread{border-left:4px solid var(--red);background:linear-gradient(90deg,rgba(255,45,61,.08),var(--surface))}
+.nitem .ni{font-size:22px;line-height:1}
+.nitem .nt{font-size:13.5px;line-height:1.5}
+.nitem small{color:var(--mut);font-size:12px}
+
+/* Forms */
+.panel{max-width:460px;margin:30px auto;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:28px 24px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.panel.wide{max-width:600px}
+.panel h2{margin:0 0 4px;font-size:22px}
+.panel p.sub{color:var(--mut);font-size:13px;margin:0 0 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--mut);margin-bottom:6px;font-weight:500}
+.field input[type=text],.field input[type=password],.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;font-size:14px;transition:.2s;resize:vertical}
+.field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#999 50%),linear-gradient(135deg,#999 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(255,45,61,.6);box-shadow:0 0 0 4px rgba(255,45,61,.12)}
+.drop{display:block;border:2px dashed rgba(255,255,255,.16);border-radius:16px;padding:28px 14px;text-align:center;cursor:pointer;transition:.2s;font-size:13.5px;color:var(--mut)}
+.drop:hover,.drop.over{border-color:var(--red);background:rgba(255,45,61,.06);color:var(--tx)}
+.drop svg{width:34px;height:34px;color:var(--red);margin-bottom:6px}
+.drop input{display:none}
+.drop b{display:block;color:var(--tx);word-break:break-all}
+.row2{display:flex;gap:10px}
+.row2 .btn{flex:1;padding:13px}
+.sw{display:flex;align-items:center;gap:10px;font-size:13.5px;margin:6px 0 14px;cursor:pointer}
+.sw input{accent-color:var(--red);width:18px;height:18px}
+.prog{height:6px;background:var(--surface2);border-radius:6px;overflow:hidden;margin:8px 0;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--grad);transition:width .3s}
+.hint{font-size:12px;color:var(--mut)}
+.msg{font-size:13px;color:#ff8a93;min-height:20px;margin-bottom:8px}
+.msg.ok{color:#7dffa0}
+.empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:14px}
+.empty .big{font-size:42px;margin-bottom:8px}
+
+/* Robot doğrulaması */
+.cap{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.cap .shield{font-size:24px}
+.cap .q{flex:1;font-size:13.5px}
+.cap .q b{font-size:16px;letter-spacing:1px}
+.cap input{width:72px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px;text-align:center;font-size:15px;outline:none}
+.cap input:focus{border-color:rgba(255,45,61,.6)}
+.cap .re{background:none;font-size:17px;color:var(--mut);padding:4px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+/* Bottom nav */
+nav.bn{position:fixed;left:0;right:0;bottom:0;z-index:60;height:calc(var(--nav) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(14,14,18,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
+nav.bn button{position:relative;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--mut);padding:6px 8px;transition:.2s;min-width:56px}
+nav.bn button.on{color:var(--tx)}
+nav.bn svg{width:22px;height:22px}
+nav.bn .badge{top:0;right:8px}
+nav.bn .plus{width:46px;height:46px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 20px rgba(255,45,61,.45);margin-top:-14px}
+nav.bn .plus svg{width:24px;height:24px}
+@media(min-width:760px){nav.bn{display:none}.wrap{padding-bottom:40px}}
+@media(max-width:759px){.hdesk{display:none}.sbox{margin:0}.logo span{display:none}}
+
+/* Toast */
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav) + 24px);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
+@media(min-width:760px){#toasts{bottom:30px}}
+.toast{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 18px;font-size:13.5px;box-shadow:0 14px 40px rgba(0,0,0,.5);animation:up .25s both;pointer-events:auto}
+.toast.err{border-color:rgba(255,45,61,.6)}
+.toast.n{border-color:rgba(255,106,61,.6);cursor:pointer}
+
+/* Canlı yayın */
+.lvwrap{position:relative;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.lvwrap video{width:100%;height:100%;object-fit:contain;display:block;background:#000;max-height:none}
+.lvbadge{position:absolute;left:12px;top:12px;z-index:2;background:#e5172a;border-radius:8px;padding:4px 10px 4px 9px;font-size:11.5px;font-weight:700;letter-spacing:.6px;display:flex;gap:6px;align-items:center;box-shadow:0 4px 14px rgba(229,23,42,.5)}
+.lvbadge::before{content:'';width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
+.thumb .lvbadge{left:10px;top:10px}
+@keyframes pulse{50%{opacity:.25}}
+.lvview{position:absolute;right:12px;top:12px;z-index:2;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);border-radius:8px;padding:4px 10px;font-size:12px}
+.lvst{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);font-size:14px;text-align:center;padding:24px;line-height:1.5}
+.lvmute{position:absolute;right:12px;bottom:12px;z-index:2}
+.srcs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;height:min(70vh,560px)}
+@media(max-width:999px){.chat{height:50vh}}
+.clog{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.45;word-break:break-word}
+.clog .m b{color:#ffb0b6;font-weight:600;margin-right:6px}
+.clog .m.h b{color:#ff6a3d}
+.clog .m.h b::after{content:' • yayıncı';font-weight:400;color:var(--mut);font-size:11px}
+.cform{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.cform input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:10px 14px;outline:none;font-size:13.5px}
+.cform input:focus{border-color:rgba(255,45,61,.6)}
+.chip.livechip{color:#ff7a85}
+
+/* GIF */
+.cgif{display:block;max-width:240px;max-height:220px;border-radius:12px;margin-top:6px;background:var(--surface2)}
+.clog .cgif{max-width:200px;max-height:160px}
+img.player{width:100%;max-height:72vh;object-fit:contain;background:#000;border-radius:var(--r);display:block;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.gifbtn{cursor:pointer;padding:9px 12px;font-weight:700;font-size:12px;letter-spacing:.5px}
+.gifbadge{position:absolute;right:10px;top:10px;z-index:2;background:var(--grad);border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;letter-spacing:.6px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hin">
+    <div class="logo" onclick="go('home')"><img src="icon-192.png" alt=""><span>Doruk<b>Tube</b></span></div>
+    <div class="sbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Video, kanal veya kategori ara" autocomplete="off">
+    </div>
+    <div class="hr" id="hr"></div>
+  </div>
+</header>
+
+<div class="wrap"><main id="app"></main></div>
+<nav class="bn" id="bn"></nav>
+<div id="toasts"></div>
+
+<script>
+const SUPABASE_URL = "https://wawkbelprkrhfyngcaei.supabase.co";
+const SUPABASE_KEY = "sb_publishable_tquuOepSjSv6sGn9-esPlg_80qCTMo9";
+// Gerçek bot koruması için Cloudflare Turnstile site key'ini buraya yaz (boş bırakırsan yerleşik soru kullanılır)
+const TURNSTILE_SITE_KEY = "";
+const FAKE_DOMAIN = "@doruktube.app";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let me = null, myName = null;
+let route = {page:'home'};
+let allVideos = [], cats = [];
+let typeF = 'all', catF = null, query = '';
+let mySubs = new Set(), notifs = [], rt = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const emailOf = u => u.toLowerCase() + FAKE_DOMAIN;
+const unread = () => notifs.filter(n => !n.is_read).length;
+const catOf = id => cats.find(c => c.id === id);
+
+/* ---------- İkonlar ---------- */
+const I = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5 6.5-5s5.7 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21a2 2 0 0 0 4 0"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M7 4v16l14-8z"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9zM7 11l4-8c2 0 3 1 3 3v3h5.5a2 2 0 0 1 2 2.3l-1.2 7a2 2 0 0 1-2 1.7H7"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3v9zM17 13l-4 8c-2 0-3-1-3-3v-3H4.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 5.7 5H17"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>'
+};
+
+/* ---------- Yardımcılar ---------- */
+function toast(t, kind, onclick){
+  const d = document.createElement('div'); d.className = 'toast' + (kind==='err'?' err':kind==='n'?' n':''); d.textContent = t;
+  if(onclick) d.onclick = () => { onclick(); d.remove(); };
+  $('#toasts').appendChild(d); setTimeout(()=>d.remove(), 4200);
+}
+function ago(ts){
+  const s = Math.max(1, (Date.now() - new Date(ts)) / 1000);
+  const u = [[31536000,'yıl'],[2592000,'ay'],[604800,'hafta'],[86400,'gün'],[3600,'saat'],[60,'dk']];
+  for(const [n,l] of u) if(s >= n) return Math.floor(s/n) + ' ' + l + ' önce';
+  return 'az önce';
+}
+function hue(name){ let h = 0; for(const c of String(name)) h = (h*31 + c.charCodeAt(0)) % 360; return h; }
+function av(name, cls=''){
+  const h = hue(name);
+  return `<div class="avatar ${cls}" style="background:linear-gradient(135deg,hsl(${h} 80% 55%),hsl(${(h+40)%360} 80% 45%))">${esc(String(name)[0]?.toUpperCase()||'?')}</div>`;
+}
+const fmt = n => n >= 1e6 ? (n/1e6).toFixed(1)+' Mn' : n >= 1e3 ? (n/1e3).toFixed(1)+' B' : String(n);
+const q1 = s => String(s).replace(/'/g, "\\'");
+
+/* ---------- Oturum ---------- */
+function setUser(u){
+  const changed = (u?.id) !== (me?.id);
+  me = u || null; myName = u?.user_metadata?.username || null;
+  if(changed){ stopRealtime(); mySubs = new Set(); notifs = []; if(me) loadUserData(); }
+  header();
+}
+async function loadUserData(){
+  const uid = me.id;
+  const [s, n] = await Promise.all([
+    sb.from('subscriptions').select('channel_id').eq('subscriber_id', uid),
+    sb.from('notifications').select('*').eq('user_id', uid).order('created_at',{ascending:false}).limit(60)
+  ]);
+  if(!me || me.id !== uid) return;
+  mySubs = new Set((s.data||[]).map(x => x.channel_id));
+  notifs = n.data || [];
+  header(); startRealtime();
+  if(route.page==='home') list();
+  if(route.page==='notifications') renderNotifs();
+}
+
+/* ---------- Header / alt menü ---------- */
+function bellBtn(){ const c = unread(); return `<button class="ibtn" onclick="go('notifications')" aria-label="Bildirimler">${I.bell}${c?`<span class="badge">${c>9?'9+':c}</span>`:''}</button>`; }
+function header(){
+  const h = $('#hr');
+  if(me){
+    h.innerHTML = `<button class="btn hdesk" onclick="go('live')">🔴 Canlı</button><button class="btn hdesk" onclick="go('channels')">${I.users} Kanallar</button>
+      <button class="btn pri hdesk" onclick="go('upload')">${I.plus} Yükle</button>
+      ${bellBtn()}
+      <div class="lnk hdesk" onclick="go('channel','${q1(myName)}')" title="Kanalım">${av(myName)}</div>`;
+  } else {
+    h.innerHTML = `<button class="btn hdesk" onclick="go('live')">🔴 Canlı</button><button class="btn hdesk" onclick="go('channels')">${I.users} Kanallar</button><button class="btn pri" onclick="go('auth')">Giriş yap</button>`;
+  }
+  bottomNav();
+}
+function bottomNav(){
+  const p = route.page, c = unread();
+  $('#bn').innerHTML = `
+    <button class="${p==='home'?'on':''}" onclick="go('home')">${I.home}Ana sayfa</button>
+    <button class="${p==='channels'?'on':''}" onclick="go('channels')">${I.users}Kanallar</button>
+    <button onclick="go('upload')"><span class="plus">${I.plus}</span></button>
+    <button class="${p==='notifications'?'on':''}" onclick="${me?"go('notifications')":"go('auth')"}">${I.bell}Bildirim${c?`<span class="badge">${c>9?'9+':c}</span>`:''}</button>
+    <button class="${p==='auth'||(p==='channel'&&route.id===myName)?'on':''}" onclick="${me?`go('channel','${q1(myName)}')`:"go('auth')"}">${I.user}${me?'Kanalım':'Giriş'}</button>`;
+}
+
+/* ---------- Yönlendirme (hash) ---------- */
+function parseHash(){
+  const h = location.hash.replace(/^#\/?/, '').split('/');
+  if(h[0]==='video' && h[1]) return {page:'video', id:+h[1]};
+  if(h[0]==='c' && h[1]) return {page:'channel', id:decodeURIComponent(h[1])};
+  if(h[0]==='live' && h[1]) return {page:'watchlive', id:+h[1]};
+  if(['auth','upload','channels','notifications','live','golive'].includes(h[0])) return {page:h[0]};
+  return {page:'home'};
+}
+function go(page, id){
+  const t = page==='home' ? '' : page==='video' ? 'video/'+id : page==='watchlive' ? 'live/'+id : page==='channel' ? 'c/'+encodeURIComponent(id) : page;
+  const target = '#/' + t;
+  if(location.hash === target || (page==='home' && (location.hash==='' || location.hash==='#/' ))){ route = {page,id}; header(); render(); window.scrollTo(0,0); }
+  else location.hash = target;
+}
+window.addEventListener('hashchange', () => { route = parseHash(); header(); render(); window.scrollTo(0,0); });
+async function render(){
+  stopLiveCtx();
+  const app = $('#app');
+  const r = {live:livePage, watchlive:watchLive, golive:goLivePage, home, video:videoPage, channel:channelPage, channels:channelsPage, notifications:notifPage, auth:authPage, upload:uploadPage}[route.page];
+  if(r) return r(app, route.id);
+}
+$('#q').addEventListener('input', e => { query = e.target.value; if(route.page==='channels') channelsPage($('#app')); else if(route.page!=='home') go('home'); else list(); });
+
+/* ---------- Kartlar ---------- */
+function thumbHtml(v, tag){
+  const bg = v.thumb_url ? `style="background-image:url('${esc(v.thumb_url)}')"` : '';
+  const c = tag && catOf(v.category_id);
+  return `<div class="thumb ${v.thumb_url?'':'noimg'}" ${bg}>${v.media_type==='gif'?'<span class="gifbadge">GIF</span>':''}${c?`<span class="ctag">${c.emoji} ${esc(c.name)}</span>`:''}<div class="play"><span>${I.play}</span></div></div>`;
+}
+function card(v, i=0){
+  return `<div class="vcard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('video',${v.id})">
+    ${thumbHtml(v, true)}
+    <div class="vinfo"><div onclick="event.stopPropagation();go('channel','${q1(v.username)}')">${av(v.username)}</div><div class="vtxt">
+      <div class="vt">${esc(v.title)}</div>
+      <div class="vm">@${esc(v.username)}<br>${fmt(v.views||0)} izlenme · ${ago(v.created_at)}</div>
+    </div></div></div>`;
+}
+function scard(v, i=0){
+  return `<div class="scard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('video',${v.id})">
+    ${thumbHtml(v, true)}
+    <div class="vt" style="margin-top:9px;font-size:13.5px">${esc(v.title)}</div>
+    <div class="vm">@${esc(v.username)} · ${fmt(v.views||0)}</div></div>`;
+}
+function skeleton(n=8){
+  return `<div class="grid">${Array(n).fill('<div class="sk"><div class="thumb"></div><div class="l" style="width:85%"></div><div class="l" style="width:50%"></div></div>').join('')}</div>`;
+}
+
+/* ---------- Ana sayfa ---------- */
+async function loadCats(){
+  if(cats.length) return;
+  const {data} = await sb.from('categories').select('*').order('sort');
+  cats = data || [];
+}
+async function home(app){
+  if(!allVideos.length) app.innerHTML = skeleton();
+  const [{data, error}, , lv] = await Promise.all([
+    sb.from('videos').select('*').order('created_at',{ascending:false}).limit(200), loadCats(), fetchLives()
+  ]);
+  liveNow = lv || [];
+  if(route.page!=='home') return;
+  if(error){ app.innerHTML = `<div class="empty"><div class="big">⚠️</div>Hata: ${esc(error.message)}<br><span class="hint">SQL kodlarını çalıştırdın mı?</span></div>`; return; }
+  allVideos = data || [];
+  app.innerHTML = `<div class="chips" id="chips"></div><div class="chips" id="cchips"></div><div id="list"></div>`;
+  list();
+}
+function list(){
+  const chips = $('#chips'); if(!chips) return;
+  const types = [['all','Tümü'],...(me?[['subs','Abonelikler']]:[]),['video','Videolar'],['short','Shortlar'],['gif','GIF']];
+  if(typeF==='subs' && !me) typeF = 'all';
+  chips.innerHTML = types.map(([k,l]) => `<button class="chip ${typeF===k?'on':''}" onclick="typeF='${k}';list()">${l}</button>`).join('') + `<button class="chip livechip" onclick="go('live')">🔴 Canlı${liveNow.length?' ('+liveNow.length+')':''}</button>`;
+  $('#cchips').innerHTML = cats.length ? [`<button class="chip cat ${catF===null?'on':''}" onclick="catF=null;list()">Tüm kategoriler</button>`,
+    ...cats.map(c => `<button class="chip cat ${catF===c.id?'on':''}" onclick="catF=${c.id};list()">${c.emoji} ${esc(c.name)}</button>`)].join('') : '';
+  const q = query.trim().toLowerCase();
+  const f = allVideos.filter(v => {
+    if(catF!==null && v.category_id!==catF) return false;
+    if(typeF==='subs' && !mySubs.has(v.user_id)) return false;
+    if(!q) return true;
+    const c = catOf(v.category_id);
+    return v.title.toLowerCase().includes(q) || v.username.toLowerCase().includes(q) || (v.topic||'').toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
+  });
+  const gifs = f.filter(v=>v.media_type==='gif'), vids = f.filter(v=>!v.is_short && v.media_type!=='gif'), sh = f.filter(v=>v.is_short && v.media_type!=='gif');
+  let h = '';
+  if(typeF==='all' && catF===null && !q && liveNow.length) h += `<h2 class="sec"><i></i>🔴 Canlı yayınlar</h2><div class="grid" style="margin-bottom:26px">${liveNow.slice(0,4).map(liveCard).join('')}</div>`;
+  if(typeF!=='video' && typeF!=='gif' && sh.length) h += `<h2 class="sec"><i></i>Shortlar</h2><div class="shorts">${sh.map(scard).join('')}</div>`;
+  if(typeF!=='short' && typeF!=='gif' && vids.length) h += `<h2 class="sec"><i></i>Videolar</h2><div class="grid">${vids.map(card).join('')}</div>`;
+  if((typeF==='all' || typeF==='gif' || typeF==='subs') && gifs.length) h += `<h2 class="sec"><i></i>GIF'ler</h2><div class="grid">${gifs.map(card).join('')}</div>`;
+  if(!h) h = `<div class="empty"><div class="big">${typeF==='subs'?'🔔':'🎬'}</div>${typeF==='subs' ? (mySubs.size ? 'Abone olduğun kanallardan video yok.' : 'Henüz kimseye abone değilsin. Kanallar sayfasına göz at!') : q||catF!==null ? 'Eşleşen video yok.' : 'Henüz video yok. İlk yükleyen sen ol!'}</div>`;
+  $('#list').innerHTML = h;
+}
+
+/* ---------- Abonelik ---------- */
+function subBtn(cid){
+  if(me && cid===me.id) return '';
+  const on = mySubs.has(cid);
+  return `<button class="btn subbtn ${on?'on':'pri'}" data-cid="${cid}" onclick="toggleSub('${cid}')">${on?'Abonesin ✓':'🔔 Abone ol'}</button>`;
+}
+async function toggleSub(cid){
+  if(!me){ toast('Abone olmak için giriş yapmalısın.', 'err'); return go('auth'); }
+  if(cid===me.id) return;
+  const was = mySubs.has(cid);
+  if(was){ const {error} = await sb.from('subscriptions').delete().eq('subscriber_id',me.id).eq('channel_id',cid); if(error) return toast(error.message,'err'); mySubs.delete(cid); }
+  else { const {error} = await sb.from('subscriptions').insert({subscriber_id:me.id,channel_id:cid}); if(error) return toast(error.message,'err'); mySubs.add(cid); toast('Abone oldun 🔔'); }
+  document.querySelectorAll(`.subbtn[data-cid="${cid}"]`).forEach(b => { const on = mySubs.has(cid); b.className = 'btn subbtn ' + (on?'on':'pri'); b.textContent = on?'Abonesin ✓':'🔔 Abone ol'; });
+  const sc = $('#sc');
+  if(sc){ const n = Math.max(0, (+sc.dataset.n) + (was?-1:1)); sc.dataset.n = n; sc.textContent = fmt(n); }
+}
+async function subCount(cid){
+  const {count} = await sb.from('subscriptions').select('subscriber_id',{count:'exact',head:true}).eq('channel_id',cid);
+  return count || 0;
+}
+
+/* ---------- Video sayfası ---------- */
+async function videoPage(app, id){
+  app.innerHTML = skeleton(1);
+  const {data:v, error} = await sb.from('videos').select('*').eq('id',id).single();
+  if(route.page!=='video' || route.id!==id) return;
+  if(error || !v){ app.innerHTML = '<div class="empty"><div class="big">🕳️</div>Video bulunamadı.</div>'; return; }
+  sb.rpc('increment_views',{vid:id}).then(()=>{});
+  v.views = (v.views||0) + 1;
+  await loadCats();
+  const [{data:likes},{data:comments},{data:others},sc] = await Promise.all([
+    sb.from('likes').select('user_id,value').eq('video_id',id),
+    sb.from('comments').select('*').eq('video_id',id).order('created_at',{ascending:false}),
+    sb.from('videos').select('*').neq('id',id).order('created_at',{ascending:false}).limit(12),
+    subCount(v.user_id)
+  ]);
+  if(route.page!=='video' || route.id!==id) return;
+  const c = catOf(v.category_id);
+  app.innerHTML = `<div class="watch">
+    <div>
+      ${v.media_type==='gif' ? `<img class="player" src="${esc(v.video_url)}" alt="${esc(v.title)}">` : `<video class="player" src="${esc(v.video_url)}" poster="${esc(v.thumb_url||'')}" controls playsinline autoplay></video>`}
+      <h1 class="wt">${esc(v.title)}</h1>
+      <div class="wmeta">${fmt(v.views)} izlenme · ${ago(v.created_at)}</div>
+      <div class="wbar">
+        <div class="who"><div class="lnk" onclick="go('channel','${q1(v.username)}')">${av(v.username)}</div>
+          <div><span class="lnk" onclick="go('channel','${q1(v.username)}')">@${esc(v.username)}</span><small><span id="sc" data-n="${sc}">${fmt(sc)}</span> abone</small></div>
+          ${subBtn(v.user_id)}</div>
+        <div class="acts"><div class="lk" id="lk"></div>
+          <button class="btn" onclick="share('${q1(v.title)}')">${I.share} Paylaş</button></div>
+      </div>
+      <div class="desc">${c?`<span class="tp" style="cursor:pointer" onclick="catF=${c.id};typeF='all';go('home')">${c.emoji} ${esc(c.name)}</span>`:''}${v.topic?`<span class="tp">${esc(v.topic)}</span>`:''}${(c||v.topic)?'<br>':''}${esc(v.description||'Açıklama yok.')}</div>
+      <div class="comm">
+        <h3 id="ch"></h3>
+        <div class="cin"><input id="ci" maxlength="500" placeholder="Yorum ekle..."><label class="btn gifbtn" title="GIF ekle">GIF<input type="file" accept="image/gif" hidden onchange="sendGifComment(this,${id})"></label><button class="btn pri" onclick="sendComment(${id})">Gönder</button></div>
+        <div id="cl"></div>
+      </div>
+    </div>
+    <aside class="side"><h3>Diğer videolar</h3>
+      ${(others||[]).map(o=>`<div class="rel" onclick="go('video',${o.id})">${thumbHtml(o)}<div class="vtxt"><div class="vt">${esc(o.title)}</div><div class="vm">@${esc(o.username)}<br>${fmt(o.views||0)} izlenme</div></div></div>`).join('') || '<div class="hint">Başka video yok.</div>'}
+    </aside></div>`;
+  $('#ci').addEventListener('keydown', e => { if(e.key==='Enter') sendComment(id); });
+  window._likes = likes || []; drawLikes(id);
+  window._comments = comments || []; drawComments(id);
+}
+async function share(t){
+  const url = location.href;
+  try{ if(navigator.share){ await navigator.share({title:t,url}); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(url); toast('Link kopyalandı'); }catch(e){ toast(url); }
+}
+function drawLikes(id){
+  const L = window._likes;
+  const up = L.filter(x=>x.value===1).length, dn = L.filter(x=>x.value===-1).length;
+  const mine = me ? (L.find(x=>x.user_id===me.id)?.value || 0) : 0;
+  $('#lk').innerHTML = `<button class="${mine===1?'on':''}" onclick="vote(${id},1)">${I.up} ${up}</button>
+    <button class="${mine===-1?'on':''}" onclick="vote(${id},-1)">${I.down} ${dn}</button>`;
+}
+async function vote(id, val){
+  if(!me){ toast('Önce giriş yapmalısın.', 'err'); return go('auth'); }
+  const L = window._likes, cur = L.find(x=>x.user_id===me.id);
+  if(cur && cur.value===val){
+    await sb.from('likes').delete().eq('video_id',id).eq('user_id',me.id);
+    window._likes = L.filter(x=>x.user_id!==me.id);
+  } else {
+    const {error} = await sb.from('likes').upsert({video_id:id,user_id:me.id,value:val},{onConflict:'video_id,user_id'});
+    if(error) return toast(error.message, 'err');
+    window._likes = L.filter(x=>x.user_id!==me.id).concat({user_id:me.id,value:val});
+  }
+  drawLikes(id);
+}
+function drawComments(id){
+  const C = window._comments;
+  $('#ch').textContent = `${C.length} yorum`;
+  $('#cl').innerHTML = C.length ? C.map(c => `<div class="cm"><div class="lnk" onclick="go('channel','${q1(c.username)}')">${av(c.username)}</div>
+    <div class="b"><b class="lnk" onclick="go('channel','${q1(c.username)}')">@${esc(c.username)}</b><small>${ago(c.created_at)}</small><br>${gifUrl(c.content) ? `<img class="cgif" src="${esc(gifUrl(c.content))}" loading="lazy" alt="GIF">` : esc(c.content)}</div>
+    ${me && c.user_id===me.id ? `<button class="x" onclick="delComment(${c.id},${id})">Sil</button>`:''}</div>`).join('')
+    : '<div class="hint">İlk yorumu sen yap.</div>';
+}
+async function sendComment(id){
+  if(!me){ toast('Yorum için giriş yapmalısın.', 'err'); return go('auth'); }
+  const t = $('#ci').value.trim(); if(!t) return;
+  const {data,error} = await sb.from('comments').insert({video_id:id,user_id:me.id,username:myName,content:t}).select().single();
+  if(error) return toast(error.message, 'err');
+  window._comments.unshift(data); $('#ci').value=''; drawComments(id);
+}
+async function delComment(cid,id){
+  await sb.from('comments').delete().eq('id',cid);
+  window._comments = window._comments.filter(c=>c.id!==cid); drawComments(id);
+}
+
+
+/* ---------- GIF yardımcıları ---------- */
+const GIF_HOSTS = ['media.giphy.com','i.giphy.com','media.tenor.com','c.tenor.com'];
+function gifUrl(t){
+  t = String(t||'').trim();
+  if(!/^https:\/\/\S+\.gif(\?\S*)?$/i.test(t)) return null;
+  try{ const h = new URL(t).hostname; if(h === new URL(SUPABASE_URL).hostname || GIF_HOSTS.includes(h)) return t; }catch(e){}
+  return null;
+}
+function gifImg(url){ const i = document.createElement('img'); i.className = 'cgif'; i.src = url; i.loading = 'lazy'; i.alt = 'GIF'; return i; }
+async function uploadGif(file){
+  if(!me){ toast('GIF için giriş yapmalısın.', 'err'); go('auth'); return null; }
+  if(!file) return null;
+  if(!/gif$/i.test(file.type) && !/\.gif$/i.test(file.name)){ toast('Sadece .gif dosyası seç.', 'err'); return null; }
+  if(file.size > 10*1024*1024){ toast('GIF en fazla 10 MB olabilir.', 'err'); return null; }
+  toast('GIF yükleniyor...');
+  const path = `${me.id}/gif_${Date.now()}.gif`;
+  const {error} = await sb.storage.from('videos').upload(path, file, {contentType:'image/gif'});
+  if(error){ toast(error.message, 'err'); return null; }
+  return sb.storage.from('videos').getPublicUrl(path).data.publicUrl;
+}
+async function sendGifComment(input, id){
+  const f = input.files[0]; input.value = '';
+  const url = await uploadGif(f); if(!url) return;
+  const {data, error} = await sb.from('comments').insert({video_id:id, user_id:me.id, username:myName, content:url}).select().single();
+  if(error) return toast(error.message, 'err');
+  window._comments.unshift(data); drawComments(id);
+}
+async function chatGif(input){
+  const f = input.files[0]; input.value = '';
+  if(!liveCtx || !liveCtx.ch) return;
+  if(Date.now() - lastChat < 1200) return toast('Biraz yavaş :)', 'err');
+  const url = await uploadGif(f); if(!url) return;
+  lastChat = Date.now();
+  const p = {u:myName, t:url, h: liveCtx.kind==='host'};
+  bsend(liveCtx.ch, 'chat', p); chatAdd(p);
+}
+
+/* ---------- Kanal sayfası ---------- */
+async function channelPage(app, name){
+  app.innerHTML = skeleton(4);
+  await loadCats();
+  const {data:p} = await sb.from('profiles').select('*').eq('username', name).maybeSingle();
+  if(route.page!=='channel' || route.id!==name) return;
+  if(!p){ app.innerHTML = '<div class="empty"><div class="big">🕳️</div>Kanal bulunamadı.</div>'; return; }
+  const [{data:vids}, sc] = await Promise.all([
+    sb.from('videos').select('*').eq('user_id', p.id).order('created_at',{ascending:false}),
+    subCount(p.id)
+  ]);
+  if(route.page!=='channel' || route.id!==name) return;
+  const mine = me && me.id === p.id, h = hue(p.username);
+  window._chv = vids || []; window._chTab = 'video';
+  app.innerHTML = `<div class="banner" style="background:linear-gradient(135deg,hsl(${h} 80% 45%),hsl(${(h+50)%360} 80% 30%))"></div>
+    <div class="chead">${av(p.username)}
+      <div class="ci"><h1>@${esc(p.username)}</h1>
+        <div class="st"><span id="sc" data-n="${sc}">${fmt(sc)}</span> abone · ${(vids||[]).length} video</div></div>
+      <div class="acts">${subBtn(p.id)}${mine?`<button class="btn" onclick="logout()">Çıkış yap</button>`:''}</div></div>
+    ${mine ? `<div class="field" style="padding:0 18px"><label>Kanal açıklaması</label><textarea id="bio" rows="3" maxlength="300" placeholder="Kanalını anlat...">${esc(p.bio||'')}</textarea>
+      <button class="btn" style="margin-top:8px" onclick="saveBio()">Kaydet</button></div>`
+      : (p.bio ? `<div class="bio">${esc(p.bio)}</div>` : '')}
+    <div class="chips" id="chips"></div><div id="list"></div>`;
+  drawChannel();
+}
+function drawChannel(){
+  const t = window._chTab;
+  $('#chips').innerHTML = [['video','Videolar'],['short','Shortlar']].map(([k,l]) => `<button class="chip ${t===k?'on':''}" onclick="window._chTab='${k}';drawChannel()">${l}</button>`).join('');
+  const f = window._chv.filter(v => t==='short' ? v.is_short : !v.is_short);
+  $('#list').innerHTML = f.length ? (t==='short' ? `<div class="shorts" style="flex-wrap:wrap;overflow:visible">${f.map(scard).join('')}</div>` : `<div class="grid">${f.map(card).join('')}</div>`)
+    : '<div class="empty"><div class="big">🎞️</div>Burada henüz video yok.</div>';
+}
+async function saveBio(){
+  const {error} = await sb.from('profiles').update({bio:$('#bio').value.trim()}).eq('id', me.id);
+  toast(error ? error.message : 'Kaydedildi ✓', error?'err':'');
+}
+
+/* ---------- Kanallar listesi ---------- */
+async function channelsPage(app){
+  if(!$('#chl')) app.innerHTML = `<h2 class="sec"><i></i>Kanallar</h2><div id="chl">${skeleton(3)}</div>`;
+  const [{data:ps},{data:ss},{data:vs}] = await Promise.all([
+    sb.from('profiles').select('id,username,bio'), sb.from('subscriptions').select('channel_id'), sb.from('videos').select('user_id')
+  ]);
+  if(route.page!=='channels') return;
+  const sc = {}, vc = {};
+  (ss||[]).forEach(x => sc[x.channel_id] = (sc[x.channel_id]||0)+1);
+  (vs||[]).forEach(x => vc[x.user_id] = (vc[x.user_id]||0)+1);
+  const q = query.trim().toLowerCase();
+  const l = (ps||[]).filter(p => !q || p.username.toLowerCase().includes(q)).sort((a,b) => (sc[b.id]||0)-(sc[a.id]||0) || (vc[b.id]||0)-(vc[a.id]||0));
+  $('#chl').innerHTML = l.length ? `<div class="chgrid">${l.map((p,i) => `<div class="chcard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('channel','${q1(p.username)}')">
+      ${av(p.username)}<div style="flex:1;min-width:0"><div style="font-weight:600">@${esc(p.username)}</div>
+      <div class="vm">${fmt(sc[p.id]||0)} abone · ${vc[p.id]||0} video</div></div>${subBtn(p.id).replace('onclick="','onclick="event.stopPropagation();')}</div>`).join('')}</div>`
+    : '<div class="empty"><div class="big">👥</div>Kanal bulunamadı.</div>';
+}
+
+/* ---------- Bildirimler ---------- */
+const NI = {video:'🎬', comment:'💬', like:'👍', sub:'🔔', live:'🔴'};
+function ntext(n){
+  const a = `@${n.actor_username}`, t = n.video_title ? ` “${n.video_title}”` : '';
+  return n.type==='video' ? `${a} yeni video yükledi:${t}` : n.type==='comment' ? `${a} videona yorum yaptı:${t}` : n.type==='like' ? `${a} videonu beğendi:${t}` : n.type==='live' ? `${a} canlı yayına başladı:${t}` : `${a} kanalına abone oldu`;
+}
+function openNotif(n){
+  if(!n.is_read) markRead(n.id);
+  if(n.live_id) go('watchlive', n.live_id); else if(n.video_id) go('video', n.video_id); else go('channel', n.actor_username);
+}
+async function markRead(id){
+  const n = notifs.find(x=>x.id===id); if(n) n.is_read = true;
+  header(); sb.from('notifications').update({is_read:true}).eq('id',id).then(()=>{});
+}
+async function readAll(){
+  notifs.forEach(n => n.is_read = true); header(); renderNotifs();
+  await sb.from('notifications').update({is_read:true}).eq('user_id',me.id).eq('is_read',false);
+}
+async function clearAll(){
+  if(!confirm('Tüm bildirimler silinsin mi?')) return;
+  notifs = []; header(); renderNotifs();
+  await sb.from('notifications').delete().eq('user_id',me.id);
+}
+function notifPage(app){
+  if(!me){ toast('Bildirimler için giriş yapmalısın.', 'err'); return authPage(app); }
+  renderNotifs();
+}
+function renderNotifs(){
+  const app = $('#app'); if(route.page!=='notifications') return;
+  const canAsk = 'Notification' in window && Notification.permission === 'default';
+  app.innerHTML = `<div class="nlist"><h2 class="sec"><i></i>Bildirimler</h2>
+    <div class="acts" style="margin-bottom:14px">
+      ${unread()?`<button class="btn" onclick="readAll()">Hepsini okundu yap</button>`:''}
+      ${notifs.length?`<button class="btn" onclick="clearAll()">Temizle</button>`:''}
+      ${canAsk?`<button class="btn pri" onclick="askBrowserNotif()">Tarayıcı bildirimlerini aç</button>`:''}</div>
+    ${notifs.length ? notifs.map((n,i) => `<div class="nitem ${n.is_read?'':'unread'}" style="animation-delay:${Math.min(i,10)*30}ms" onclick="openNotif(notifs.find(x=>x.id===${n.id}))">
+      <div class="ni">${NI[n.type]||'🔔'}</div><div><div class="nt">${esc(ntext(n))}</div><small>${ago(n.created_at)}</small></div></div>`).join('')
+      : '<div class="empty"><div class="big">🔔</div>Henüz bildirimin yok.<br><span class="hint">Abone olduğun kanallar video yükleyince, biri yorum yapınca ya da beğenince burada görünür.</span></div>'}</div>`;
+}
+async function askBrowserNotif(){
+  try{ const r = await Notification.requestPermission(); toast(r==='granted' ? 'Tarayıcı bildirimleri açıldı' : 'İzin verilmedi', r==='granted'?'':'err'); }catch(e){}
+  renderNotifs();
+}
+function startRealtime(){
+  stopRealtime();
+  rt = sb.channel('notif-' + me.id)
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'notifications', filter:`user_id=eq.${me.id}`}, p => {
+      const n = p.new; if(notifs.some(x=>x.id===n.id)) return;
+      notifs.unshift(n); header();
+      toast(`${NI[n.type]||'🔔'} ${ntext(n)}`, 'n', () => openNotif(n));
+      if(route.page==='notifications') renderNotifs();
+      try{ if(document.hidden && 'Notification' in window && Notification.permission==='granted') new Notification('DorukTube', {body:ntext(n), icon:'icon-192.png'}); }catch(e){}
+    }).subscribe();
+}
+function stopRealtime(){ if(rt){ sb.removeChannel(rt); rt = null; } }
+
+/* ---------- Robot doğrulaması ---------- */
+let cap = {a:0,b:0,t:0,ts:null};
+function newCap(){ cap.a = 2 + Math.floor(Math.random()*8); cap.b = 2 + Math.floor(Math.random()*8); cap.t = Date.now(); const q = $('#capq'); if(q) q.innerHTML = `<b>${cap.a} + ${cap.b} = ?</b>`; const i = $('#capa'); if(i) i.value=''; }
+function capHtml(){
+  if(TURNSTILE_SITE_KEY) return `<div id="ts" style="margin-bottom:14px"></div>`;
+  return `<div class="cap"><span class="shield">🤖</span><div class="q">Robot olmadığını doğrula<br><span id="capq"></span></div>
+    <input id="capa" inputmode="numeric" maxlength="2" autocomplete="off"><button class="re" type="button" onclick="newCap()" title="Yenile">↻</button></div>
+    <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">`;
+}
+function capInit(){
+  if(TURNSTILE_SITE_KEY){
+    const go2 = () => { cap.ts = turnstile.render('#ts', {sitekey:TURNSTILE_SITE_KEY, theme:'dark'}); };
+    if(window.turnstile) go2();
+    else { const s = document.createElement('script'); s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; s.onload = go2; document.head.appendChild(s); }
+  } else newCap();
+}
+/* null → başarısız; "" → yerleşik doğrulama geçti; "token" → Turnstile */
+function capCheck(){
+  if(TURNSTILE_SITE_KEY){
+    const t = window.turnstile && cap.ts !== null ? turnstile.getResponse(cap.ts) : '';
+    if(!t){ msg('Lütfen robot doğrulamasını tamamla.'); return null; }
+    return t;
+  }
+  if($('#hp').value){ msg('Doğrulama başarısız.'); return null; }
+  if(Date.now() - cap.t < 1500){ msg('Biraz yavaş ol, doğrulama için bekle.'); return null; }
+  if(parseInt($('#capa').value,10) !== cap.a + cap.b){ msg('Robot doğrulaması yanlış, tekrar dene.'); newCap(); return null; }
+  return '';
+}
+
+/* ---------- Giriş / Kayıt ---------- */
+function authPage(app){
+  app.innerHTML = `<div class="panel">
+    <h2>Hoş geldin 👋</h2><p class="sub">Kullanıcı adın ve şifrenle giriş yap ya da yeni hesap aç.</p>
+    <div class="field"><label>Kullanıcı adı</label><input type="text" id="un" autocapitalize="none" autocomplete="username" placeholder="ornek_kullanici"></div>
+    <div class="field"><label>Şifre</label><input type="password" id="pw" autocomplete="current-password" placeholder="En az 6 karakter"></div>
+    ${capHtml()}
+    <div class="msg" id="msg"></div>
+    <div class="row2"><button class="btn pri" onclick="login()">Giriş yap</button><button class="btn" onclick="register()">Kayıt ol</button></div>
+    <p class="hint" style="margin-top:14px">Kullanıcı adı 3-20 karakter: harf, rakam ve _</p></div>`;
+  $('#pw').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+  capInit();
+}
+function readAuth(){
+  const u = $('#un').value.trim(), p = $('#pw').value;
+  if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ msg('Kullanıcı adı 3-20 karakter olmalı (harf, rakam, _).'); return null; }
+  if(p.length<6){ msg('Şifre en az 6 karakter olmalı.'); return null; }
+  const c = capCheck(); if(c === null) return null;
+  return {u, p, captchaToken: c || undefined};
+}
+function msg(t,ok){ const m=$('#msg'); if(!m) return; m.textContent=t; m.className='msg'+(ok?' ok':''); }
+function capReset(){ if(TURNSTILE_SITE_KEY && window.turnstile) try{ turnstile.reset(cap.ts); }catch(e){} else newCap(); }
+async function register(){
+  const a = readAuth(); if(!a) return;
+  msg('Kayıt yapılıyor...',true);
+  const {data,error} = await sb.auth.signUp({email:emailOf(a.u),password:a.p,options:{data:{username:a.u},captchaToken:a.captchaToken}});
+  if(error){ msg(/already|registered|Database error/i.test(error.message) ? 'Bu kullanıcı adı alınmış.' : /captcha/i.test(error.message) ? 'Robot doğrulaması reddedildi.' : error.message); capReset(); return; }
+  if(!data.session){ msg('Kayıt oldu ama oturum açılmadı. Supabase\'de "Confirm email" kapalı olmalı.'); return; }
+  toast('Hoş geldin @' + a.u); go('home');
+}
+async function login(){
+  const a = readAuth(); if(!a) return;
+  msg('Giriş yapılıyor...',true);
+  const {error} = await sb.auth.signInWithPassword({email:emailOf(a.u),password:a.p,options:{captchaToken:a.captchaToken}});
+  if(error){ msg(/captcha/i.test(error.message) ? 'Robot doğrulaması reddedildi.' : 'Kullanıcı adı veya şifre hatalı.'); capReset(); return; }
+  toast('Giriş yapıldı'); go('home');
+}
+async function logout(){ await sb.auth.signOut(); toast('Çıkış yapıldı'); go('home'); }
+
+/* ---------- Video yükleme ---------- */
+async function uploadPage(app){
+  if(!me){ return authPage(app); }
+  await loadCats();
+  app.innerHTML = `<div class="panel wide">
+    <h2>Video / GIF yükle</h2><p class="sub">Kapak resmi videodan otomatik alınır. GIF'ler olduğu gibi paylaşılır.</p>
+    <button class="btn" style="margin-bottom:16px" onclick="go('golive')">🔴 Bunun yerine canlı yayın başlat</button>
+    <label class="drop" id="dz">${I.cloud}<span id="dzt">Video ya da GIF seç / buraya sürükle</span>
+      <input type="file" id="vf" accept="video/*,image/gif"></label>
+    <div class="field" style="margin-top:16px"><label>Başlık</label><input type="text" id="vt" maxlength="100"></div>
+    <div class="field"><label>Kategori</label><select id="vcat"><option value="">Kategori seç</option>${cats.map(c=>`<option value="${c.id}">${c.emoji} ${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Konu (etiket)</label><input type="text" id="vc" maxlength="60" placeholder="Örn: Team Fortress 2"></div>
+    <div class="field"><label>Açıklama</label><textarea id="vd" rows="4" maxlength="1000"></textarea></div>
+    <label class="sw"><input type="checkbox" id="vs"> Bu bir Short (dikey video)</label>
+    <div class="hint">Supabase ücretsiz planda dosya başına limit 50 MB.</div>
+    <div class="prog" id="pr"><i id="pb"></i></div>
+    <div class="msg" id="msg"></div>
+    <button class="btn pri" style="width:100%;padding:14px" id="ub" onclick="upload()">Yükle</button></div>`;
+  const dz = $('#dz'), vf = $('#vf');
+  const show = () => { const f = vf.files[0]; if(f) $('#dzt').innerHTML = `<b>${esc(f.name)}</b>${(f.size/1048576).toFixed(1)} MB`; };
+  vf.onchange = show;
+  ['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('over'); }));
+  dz.addEventListener('drop', ev => { if(ev.dataTransfer.files[0]){ vf.files = ev.dataTransfer.files; show(); } });
+}
+function makeThumb(file){
+  return new Promise(res=>{
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.src = url;
+    const done = b => { URL.revokeObjectURL(url); res(b); };
+    v.onerror = () => done(null);
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration||1)/2); };
+    v.onseeked = () => {
+      const c = document.createElement('canvas');
+      const w = Math.min(640, v.videoWidth||640);
+      c.width = w; c.height = Math.round(w * (v.videoHeight||360) / (v.videoWidth||640));
+      c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      c.toBlob(b=>done(b),'image/jpeg',0.8);
+    };
+    setTimeout(()=>done(null),10000);
+  });
+}
+async function upload(){
+  const f = $('#vf').files[0], title = $('#vt').value.trim();
+  const isGif = !!f && (/gif$/i.test(f.type) || /\.gif$/i.test(f.name));
+  if(!f) return msg('Bir video ya da GIF seç.');
+  if(!title) return msg('Başlık yaz.');
+  if(f.size > 50*1024*1024) return msg('Dosya 50 MB\'dan büyük.');
+  $('#ub').disabled = true; $('#pr').style.display='block'; $('#pb').style.width='20%';
+  msg('Yükleniyor...',true);
+  try{
+    const stamp = Date.now();
+    const ext = (f.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const vpath = `${me.id}/${stamp}.${ext}`;
+    const {error:e1} = await sb.storage.from('videos').upload(vpath,f,{contentType:f.type||(isGif?'image/gif':'video/mp4')});
+    if(e1) throw e1;
+    $('#pb').style.width='70%';
+    let thumb_url = null;
+    const tb = isGif ? null : await makeThumb(f);
+    if(tb){
+      const tpath = `${me.id}/${stamp}_thumb.jpg`;
+      const {error:e2} = await sb.storage.from('videos').upload(tpath,tb,{contentType:'image/jpeg'});
+      if(!e2) thumb_url = sb.storage.from('videos').getPublicUrl(tpath).data.publicUrl;
+    }
+    const video_url = sb.storage.from('videos').getPublicUrl(vpath).data.publicUrl;
+    if(isGif) thumb_url = video_url;
+    const row = {user_id:me.id, username:myName, title, description:$('#vd').value.trim(),
+      topic:$('#vc').value.trim(), video_url, thumb_url, is_short:!isGif && $('#vs').checked, media_type:isGif?'gif':'video'};
+    const cv = $('#vcat').value; if(cv) row.category_id = +cv;
+    const {data,error:e3} = await sb.from('videos').insert(row).select().single();
+    if(e3) throw e3;
+    $('#pb').style.width='100%';
+    allVideos = []; toast('Video yüklendi 🎉');
+    go('video', data.id);
+  }catch(err){
+    msg('Hata: '+(err.message||err)); $('#ub').disabled=false;
+  }
+}
+
+
+/* ---------- CANLI YAYIN (WebRTC + Supabase Realtime sinyalleşme) ---------- */
+const MAX_VIEWERS = 6; // yayıncı bağlantısı her izleyiciye ayrı gider; bu yüzden sınırlı
+const ICE = {iceServers:[
+  {urls:'stun:stun.l.google.com:19302'}, {urls:'stun:stun1.l.google.com:19302'}
+  // Bazı mobil ağlarda bağlantı kurulamazsa kendi TURN sunucunu ekle:
+  // ,{urls:'turn:SUNUCU:3478', username:'KULLANICI', credential:'SIFRE'}
+]};
+let liveNow = [], liveCtx = null;
+const bsend = (ch, event, payload) => ch.send({type:'broadcast', event, payload});
+function stopLiveCtx(){ if(liveCtx){ const c = liveCtx; liveCtx = null; try{ c.stop(); }catch(e){} } }
+function dur(ms){ const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0'); }
+function addIce(p, c){ if(p.pc.remoteDescription) p.pc.addIceCandidate(c).catch(()=>{}); else p.q.push(c); }
+
+async function fetchLives(){
+  const since = new Date(Date.now() - 60000).toISOString();
+  const {data} = await sb.from('lives').select('*').eq('is_live',true).gte('last_ping',since).order('started_at',{ascending:false});
+  return data || [];
+}
+function liveCard(l, i=0){
+  const h = hue(l.username), c = catOf(l.category_id);
+  return `<div class="vcard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('watchlive',${l.id})">
+    <div class="thumb" style="background:linear-gradient(135deg,hsl(${h} 70% 38%),hsl(${(h+50)%360} 70% 16%))"><span class="lvbadge">CANLI</span><div class="play" style="opacity:1"><span>${I.play}</span></div></div>
+    <div class="vinfo"><div onclick="event.stopPropagation();go('channel','${q1(l.username)}')">${av(l.username)}</div><div class="vtxt">
+      <div class="vt">${esc(l.title)}</div>
+      <div class="vm">@${esc(l.username)}<br>${c?c.emoji+' '+esc(c.name)+' · ':''}${ago(l.started_at)} başladı</div></div></div></div>`;
+}
+async function livePage(app){
+  app.innerHTML = `<div class="acts" style="justify-content:space-between;margin-bottom:14px"><h2 class="sec" style="margin:0"><i></i>🔴 Canlı yayınlar</h2>
+    <button class="btn pri" onclick="go('golive')">🔴 Yayın başlat</button></div><div id="ll">${skeleton(3)}</div>`;
+  const [, l] = await Promise.all([loadCats(), fetchLives()]);
+  if(route.page!=='live') return;
+  $('#ll').innerHTML = l.length ? `<div class="grid">${l.map(liveCard).join('')}</div>`
+    : '<div class="empty"><div class="big">📡</div>Şu an canlı yayın yok.<br><span class="hint">İlk yayını sen başlat!</span></div>';
+}
+
+/* ----- Sohbet ----- */
+function chatBox(){
+  return `<div class="chat"><div class="clog" id="clog"><div class="hint">Canlı sohbet</div></div>
+    <div class="cform"><input id="cin" maxlength="200" autocomplete="off" placeholder="${me?'Mesaj yaz...':'Sohbet için giriş yap'}" ${me?'':'disabled'}>
+    ${me?`<label class="btn gifbtn" title="GIF ekle">GIF<input type="file" accept="image/gif" hidden onchange="chatGif(this)"></label>`:''}<button class="btn pri" ${me?'':'disabled'} onclick="chatSend()">Gönder</button></div></div>`;
+}
+function wireChat(){ const i = $('#cin'); if(i) i.addEventListener('keydown', e => { if(e.key==='Enter') chatSend(); }); }
+function chatAdd(p){
+  const log = $('#clog'); if(!log || !p || !p.t) return;
+  const d = document.createElement('div'); d.className = 'm' + (p.h?' h':'');
+  const b = document.createElement('b'); b.textContent = '@' + String(p.u||'').slice(0,20);
+  d.appendChild(b); const gu = gifUrl(p.t); if(gu) d.appendChild(gifImg(gu)); else d.appendChild(document.createTextNode(String(p.t).slice(0,200)));
+  const near = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+  log.appendChild(d); while(log.children.length > 150) log.removeChild(log.firstChild);
+  if(near) log.scrollTop = log.scrollHeight;
+}
+let lastChat = 0;
+function chatSend(){
+  if(!me || !liveCtx || !liveCtx.ch) return;
+  const i = $('#cin'), t = i.value.trim(); if(!t) return;
+  if(Date.now() - lastChat < 1200){ return toast('Biraz yavaş :)', 'err'); }
+  lastChat = Date.now(); i.value = '';
+  const p = {u:myName, t, h: liveCtx.kind==='host'};
+  bsend(liveCtx.ch, 'chat', p); chatAdd(p);
+}
+
+/* ----- Yayıncı ----- */
+async function goLivePage(app){
+  if(!me){ toast('Yayın açmak için giriş yapmalısın.', 'err'); return authPage(app); }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    app.innerHTML = '<div class="empty"><div class="big">📵</div>Bu tarayıcı kamera erişimini desteklemiyor ya da site HTTPS üzerinden açılmadı.</div>'; return;
+  }
+  await loadCats();
+  if(route.page!=='golive') return;
+  const hasScreen = !!navigator.mediaDevices.getDisplayMedia && !/Android|iPhone|iPad/i.test(navigator.userAgent);
+  const S = liveCtx = {kind:'host', stream:null, live:null, ch:null, peers:{}, timers:[], t0:0, ended:false, lastN:-1};
+  S.stop = () => {
+    S.ended = true; S.timers.forEach(clearInterval);
+    Object.values(S.peers).forEach(p => { try{ p.pc.close(); }catch(e){} }); S.peers = {};
+    if(S.stream) S.stream.getTracks().forEach(t => { t.onended = null; t.stop(); });
+    if(S.ch){ const ch = S.ch; Promise.resolve(bsend(ch,'end',{})).catch(()=>{}).finally(()=>setTimeout(()=>sb.removeChannel(ch), 300)); }
+    if(S.live) sb.from('lives').update({is_live:false, ended_at:new Date().toISOString()}).eq('id',S.live.id).then(()=>{});
+    window.onbeforeunload = null;
+  };
+  app.innerHTML = `<div class="panel wide" id="studio">
+    <h2>🔴 Canlı yayın</h2><p class="sub">Kaynağını seç, başlık yaz ve yayına çık. Bu sayfadan ayrılırsan yayın biter.</p>
+    <div class="srcs"><button class="btn" onclick="pickSource('cam')">📷 Kamera</button>${hasScreen?`<button class="btn" onclick="pickSource('screen')">🖥️ Ekran paylaş</button>`:''}</div>
+    <div class="lvwrap" style="margin-bottom:16px"><video id="pv" autoplay muted playsinline></video><div class="lvst" id="pvh">Önce bir kaynak seç</div></div>
+    <div class="field"><label>Yayın başlığı</label><input type="text" id="lt" maxlength="100"></div>
+    <div class="field"><label>Kategori</label><select id="lcat"><option value="">Kategori seç</option>${cats.map(c=>`<option value="${c.id}">${c.emoji} ${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="msg" id="msg"></div>
+    <button class="btn pri" id="lgo" style="width:100%;padding:14px" disabled onclick="startBroadcast()">🔴 Yayını başlat</button>
+    <p class="hint" style="margin-top:12px">Yayın doğrudan izleyicilere iletilir; aynı anda en fazla ${MAX_VIEWERS} izleyici bağlanabilir.</p></div>`;
+}
+async function pickSource(kind){
+  const S = liveCtx; if(!S || S.kind!=='host' || S.live) return;
+  let st;
+  try{
+    st = kind==='screen'
+      ? await navigator.mediaDevices.getDisplayMedia({video:true, audio:true})
+      : await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}}, audio:{echoCancellation:true, noiseSuppression:true}});
+  }catch(e){
+    return msg(e.name==='NotAllowedError' ? 'İzin verilmedi. Tarayıcı ayarlarından kamera/mikrofon iznini aç.' : 'Kaynak açılamadı: ' + (e.message||e.name));
+  }
+  if(S.stream) S.stream.getTracks().forEach(t => t.stop());
+  S.stream = st; msg('');
+  $('#pv').srcObject = st; $('#pvh').style.display = 'none'; $('#lgo').disabled = false;
+  st.getVideoTracks()[0].onended = () => { if(S.live && !S.ended){ toast('Yayın kaynağı kapandı, yayın bitti.', 'err'); go('live'); } };
+}
+async function startBroadcast(){
+  const S = liveCtx; if(!S || S.kind!=='host' || !S.stream || S.live) return;
+  const title = $('#lt').value.trim(); if(!title) return msg('Yayına bir başlık yaz.');
+  $('#lgo').disabled = true; msg('Yayın başlıyor...', true);
+  await sb.from('lives').update({is_live:false, ended_at:new Date().toISOString()}).eq('user_id',me.id).eq('is_live',true);
+  const row = {user_id:me.id, username:myName, title}; const cv = $('#lcat').value; if(cv) row.category_id = +cv;
+  const {data:live, error} = await sb.from('lives').insert(row).select().single();
+  if(error){ $('#lgo').disabled = false; return msg('Hata: ' + error.message + ' (update-v4.sql çalıştırıldı mı?)'); }
+  if(S.ended) return;
+  S.live = live; S.t0 = Date.now();
+  const ch = S.ch = sb.channel('live:' + live.id);
+  ch.on('broadcast',{event:'join'},   ({payload}) => hostJoin(S, payload.vid))
+    .on('broadcast',{event:'answer'}, ({payload}) => hostAnswer(S, payload))
+    .on('broadcast',{event:'ice'},    ({payload}) => { if(payload.to!=='host') return; const p = S.peers[payload.from]; if(p) addIce(p, payload.c); })
+    .on('broadcast',{event:'leave'},  ({payload}) => hostDrop(S, payload.vid))
+    .on('broadcast',{event:'chat'},   ({payload}) => chatAdd(payload))
+    .subscribe();
+  S.timers.push(setInterval(() => { sb.from('lives').update({last_ping:new Date().toISOString()}).eq('id',live.id).then(()=>{}); }, 20000));
+  S.timers.push(setInterval(() => { const el = $('#lt2'); if(el) el.textContent = dur(Date.now() - S.t0); }, 1000));
+  window.onbeforeunload = e => { e.preventDefault(); e.returnValue = ''; };
+  $('#app').innerHTML = `<div class="watch"><div>
+      <div class="lvwrap"><span class="lvbadge">CANLI</span><span class="lvview">👁 <b id="vc">0</b> · <span id="lt2">0:00</span></span><video id="pv" autoplay muted playsinline></video></div>
+      <h1 class="wt">${esc(live.title)}</h1>
+      <div class="acts" style="margin:12px 0"><button class="btn" onclick="copyLiveLink()">🔗 Linki kopyala</button><button class="btn pri" onclick="endLive()">⏹ Yayını bitir</button></div>
+      <div class="hint">Kamera/ekran açık kaldığı sürece yayındasın. Bu sayfadan ayrılırsan yayın biter.</div></div>
+    <aside class="side">${chatBox()}</aside></div>`;
+  $('#pv').srcObject = S.stream; wireChat();
+  toast('Yayındasın 🔴');
+}
+async function hostJoin(S, vid){
+  if(S.ended || !vid || !S.stream) return;
+  const old = S.peers[vid];
+  if(old && !['failed','closed'].includes(old.pc.connectionState) && Date.now() - old.t < 5000) return;
+  if(old){ try{ old.pc.close(); }catch(e){} delete S.peers[vid]; }
+  if(Object.keys(S.peers).length >= MAX_VIEWERS){ bsend(S.ch,'full',{to:vid}); return; }
+  const pc = new RTCPeerConnection(ICE), p = S.peers[vid] = {pc, q:[], t:Date.now()};
+  S.stream.getTracks().forEach(t => pc.addTrack(t, S.stream));
+  let sent = false; const buf = [];
+  const sendIce = c => bsend(S.ch,'ice',{to:vid, from:'host', c});
+  pc.onicecandidate = e => { if(!e.candidate) return; sent ? sendIce(e.candidate) : buf.push(e.candidate); };
+  pc.onconnectionstatechange = () => { if(['failed','closed'].includes(pc.connectionState) && S.peers[vid]===p) delete S.peers[vid]; hostCount(S); };
+  try{
+    await pc.setLocalDescription(await pc.createOffer());
+    await bsend(S.ch,'offer',{to:vid, sdp:pc.localDescription});
+    sent = true; buf.forEach(sendIce);
+  }catch(e){ console.warn(e); }
+}
+async function hostAnswer(S, {from, sdp}){
+  const p = S.peers[from]; if(!p) return;
+  try{ await p.pc.setRemoteDescription(sdp); p.q.forEach(c => p.pc.addIceCandidate(c).catch(()=>{})); p.q = []; }catch(e){ console.warn(e); }
+}
+function hostDrop(S, vid){ const p = S.peers[vid]; if(p){ try{ p.pc.close(); }catch(e){} delete S.peers[vid]; } hostCount(S); }
+function hostCount(S){
+  const n = Object.values(S.peers).filter(p => p.pc.connectionState==='connected').length;
+  const el = $('#vc'); if(el) el.textContent = n;
+  if(n !== S.lastN && S.ch){ S.lastN = n; bsend(S.ch,'count',{n}); }
+}
+function copyLiveLink(){ const id = liveCtx && liveCtx.live && liveCtx.live.id; const u = location.href.split('#')[0] + '#/live/' + id; navigator.clipboard.writeText(u).then(() => toast('Yayın linki kopyalandı'), () => toast(u)); }
+function endLive(){ if(confirm('Yayın bitirilsin mi?')) go('live'); }
+
+/* ----- İzleyici ----- */
+async function watchLive(app, id){
+  app.innerHTML = skeleton(1);
+  const {data:l} = await sb.from('lives').select('*').eq('id',id).maybeSingle();
+  if(route.page!=='watchlive' || route.id!==id) return;
+  if(!l){ app.innerHTML = '<div class="empty"><div class="big">🕳️</div>Yayın bulunamadı.</div>'; return; }
+  const [, sc] = await Promise.all([loadCats(), subCount(l.user_id)]);
+  if(route.page!=='watchlive' || route.id!==id) return;
+  const c = catOf(l.category_id);
+  const alive = l.is_live && Date.now() - new Date(l.last_ping) < 70000;
+  app.innerHTML = `<div class="watch"><div>
+      <div class="lvwrap">${alive?'<span class="lvbadge">CANLI</span><span class="lvview">👁 <b id="vc">0</b></span>':''}
+        <video id="lv" autoplay muted playsinline></video>
+        <div class="lvst" id="lvst">${alive?'Yayına bağlanılıyor…':'Bu yayın sona erdi.'}</div>
+        <button class="btn lvmute" id="lvm" style="display:none" onclick="unmuteLive()">🔊 Sesi aç</button></div>
+      <h1 class="wt">${esc(l.title)}</h1>
+      <div class="wbar"><div class="who"><div class="lnk" onclick="go('channel','${q1(l.username)}')">${av(l.username)}</div>
+        <div><span class="lnk" onclick="go('channel','${q1(l.username)}')">@${esc(l.username)}</span><small><span id="sc" data-n="${sc}">${fmt(sc)}</span> abone</small></div>${subBtn(l.user_id)}</div>
+        <div class="acts"><button class="btn" onclick="share('${q1(l.title)}')">${I.share} Paylaş</button></div></div>
+      ${c?`<div class="desc"><span class="tp">${c.emoji} ${esc(c.name)}</span></div>`:''}</div>
+    <aside class="side">${chatBox()}</aside></div>`;
+  wireChat();
+  if(!alive) return;
+
+  const vid = Math.random().toString(36).slice(2,10), v = $('#lv');
+  let pc = null, q = [], joinT = null, tries = 0, connected = false;
+  const ch = sb.channel('live:' + id);
+  liveCtx = {kind:'view', ch, stop(){ clearInterval(joinT); try{ if(pc) pc.close(); }catch(e){} Promise.resolve(bsend(ch,'leave',{vid})).catch(()=>{}).finally(()=>setTimeout(()=>sb.removeChannel(ch), 300)); }};
+  const setSt = t => { const s = $('#lvst'); if(!s) return; s.style.display = t ? 'flex' : 'none'; if(t) s.textContent = t; };
+  const join = () => { if(connected) return; tries++; bsend(ch,'join',{vid}); if(tries > 3) setSt('Yayıncıya ulaşılamıyor… Yayın bitmiş olabilir, tekrar deneniyor.'); };
+  const startJoin = () => { clearInterval(joinT); connected = false; tries = 0; join(); joinT = setInterval(join, 6000); };
+
+  ch.on('broadcast',{event:'offer'}, async ({payload}) => {
+      if(payload.to !== vid) return;
+      try{ if(pc) pc.close(); }catch(e){}
+      const mine = pc = new RTCPeerConnection(ICE); q = [];
+      pc.ontrack = e => { v.srcObject = e.streams[0]; v.play().catch(()=>{}); setSt(''); const m = $('#lvm'); if(m) m.style.display = v.muted ? 'block' : 'none'; };
+      let sent = false; const buf = []; const sIce = c => bsend(ch,'ice',{to:'host', from:vid, c});
+      pc.onicecandidate = e => { if(!e.candidate) return; sent ? sIce(e.candidate) : buf.push(e.candidate); };
+      pc.onconnectionstatechange = () => {
+        if(pc !== mine) return; const s = pc.connectionState;
+        if(s==='connected'){ connected = true; clearInterval(joinT); setSt(''); }
+        else if(s==='failed' || s==='closed'){ setSt('Bağlantı koptu, yeniden bağlanılıyor…'); startJoin(); }
+        else if(s==='disconnected') setSt('Bağlantı zayıf…');
+      };
+      try{
+        await pc.setRemoteDescription(payload.sdp);
+        q.forEach(c => pc.addIceCandidate(c).catch(()=>{})); q = [];
+        await pc.setLocalDescription(await pc.createAnswer());
+        await bsend(ch,'answer',{from:vid, sdp:pc.localDescription});
+        sent = true; buf.forEach(sIce);
+      }catch(e){ console.warn(e); }
+    })
+    .on('broadcast',{event:'ice'},   ({payload}) => { if(payload.to !== vid || !pc) return; pc.remoteDescription ? pc.addIceCandidate(payload.c).catch(()=>{}) : q.push(payload.c); })
+    .on('broadcast',{event:'count'}, ({payload}) => { const e = $('#vc'); if(e) e.textContent = payload.n; })
+    .on('broadcast',{event:'chat'},  ({payload}) => chatAdd(payload))
+    .on('broadcast',{event:'full'},  ({payload}) => { if(payload.to === vid){ clearInterval(joinT); setSt('Yayın şu an dolu (en fazla ' + MAX_VIEWERS + ' izleyici). Biraz sonra tekrar dene.'); } })
+    .on('broadcast',{event:'end'},   () => { clearInterval(joinT); connected = true; try{ if(pc) pc.close(); }catch(e){} v.srcObject = null; setSt('Yayın sona erdi. 👋'); })
+    .subscribe(s => { if(s === 'SUBSCRIBED') startJoin(); });
+}
+function unmuteLive(){ const v = $('#lv'); if(v){ v.muted = false; v.play().catch(()=>{}); } const m = $('#lvm'); if(m) m.style.display = 'none'; }
+
+/* ---------- Başlat ---------- */
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+(async()=>{
+  route = parseHash();
+  const {data:{session}} = await sb.auth.getSession();
+  setUser(session?.user);
+  sb.auth.onAuthStateChange((_e,s)=>setUser(s?.user));
+  render();
+})();
+</script>
+</body>
+</html>
