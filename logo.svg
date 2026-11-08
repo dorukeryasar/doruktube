@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 160" width="620" height="160">
+  <rect width="620" height="160" rx="26" fill="#0b0b0b"/>
+  <!-- ikon -->
+  <rect x="14" y="14" width="132" height="132" rx="32" fill="#0b0b0b" stroke="#ff1e1e" stroke-width="8"/>
+  <path d="M46 40 H82 C112 40 132 58 132 80 C132 102 112 120 82 120 H46 Z" fill="#ff1e1e"/>
+  <path d="M70 62 L70 98 L102 80 Z" fill="#0b0b0b"/>
+  <!-- yazı -->
+  <text x="168" y="102" font-family="Lexend, 'Arial Black', Arial, sans-serif" font-weight="800" font-size="68" fill="#ffffff">Doruk<tspan fill="#ff1e1e">Tube</tspan></text>
+</svg>
