@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e12">
+<title>DorukTube - Video, Canlı Yayın & Oyunlar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0e0e12; --surface:#17171d; --surface2:#1f1f27; --line:rgba(255,255,255,.08);
+  --tx:#f4f4f6; --mut:#9a9aa8; --red:#ff2d3d; --red2:#ff6a3d;
+  --grad:linear-gradient(135deg,#ff2d3d,#ff6a3d);
+  --r:18px; --nav:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Lexend',system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(900px 400px at 85% -10%,rgba(255,45,61,.14),transparent 60%),radial-gradient(700px 400px at -10% 10%,rgba(255,106,61,.08),transparent 60%);
+  background-attachment:fixed}
+button,input,textarea,select{font-family:inherit;color:inherit}
+button{cursor:pointer;border:0}
+a{color:inherit}
+
+/* Header */
+header{position:sticky;top:0;z-index:50;background:rgba(14,14,18,.78);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hin{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:20px;cursor:pointer;letter-spacing:-.3px;white-space:nowrap}
+.logo-box{width:36px;height:36px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(255,45,61,.4);font-size:18px}
+.logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sbox{flex:1;max-width:480px;margin:0 auto;position:relative}
+.sbox input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:11px 16px 11px 42px;outline:none;font-size:14px;transition:.2s}
+.sbox input:focus{border-color:rgba(255,45,61,.6);box-shadow:0 0 0 4px rgba(255,45,61,.12)}
+.sbox svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mut)}
+.hr{display:flex;gap:8px;align-items:center;position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-weight:500;font-size:13.5px;transition:.2s;white-space:nowrap}
+.btn:hover{background:#2a2a34;transform:translateY(-1px)}
+.btn.pri{background:var(--grad);border:0;font-weight:600;box-shadow:0 6px 20px rgba(255,45,61,.3)}
+.btn.pri:hover{filter:brightness(1.1);box-shadow:0 8px 26px rgba(255,45,61,.45)}
+.btn.mod-btn{background:rgba(255,45,61,.15);color:#ff7a85;border:1px solid rgba(255,45,61,.3)}
+.btn.mod-btn:hover{background:rgba(255,45,61,.25)}
+.btn:disabled{opacity:.55;pointer-events:none}
+.ibtn{position:relative;width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:.2s}
+.ibtn:hover{background:var(--surface2)}
+.badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--grad);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 2px var(--bg)}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex:none}
+.lnk{cursor:pointer}
+.lnk:hover{text-decoration:underline}
+
+/* Layout */
+.wrap{max-width:1280px;margin:0 auto;padding:18px 16px calc(var(--nav) + 30px)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--mut);transition:.2s;white-space:nowrap}
+.chip.on{background:var(--tx);color:#000;border-color:var(--tx)}
+.chip.cat.on{background:var(--grad);color:#fff;border:0}
+.chip:not(.on):hover{color:var(--tx);background:var(--surface2)}
+h2.sec{font-size:18px;font-weight:600;margin:6px 0 14px;display:flex;align-items:center;gap:8px}
+h2.sec i{width:4px;height:18px;border-radius:4px;background:var(--grad);display:inline-block}
+
+/* Grid & Video Card */
+.grid{display:grid;grid-template-columns:1fr;gap:22px 18px}
+@media(min-width:620px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1240px){.grid{grid-template-columns:repeat(4,1fr)}}
+.vcard{cursor:pointer;animation:up .4s both}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.thumb{position:relative;aspect-ratio:16/9;border-radius:var(--r);overflow:hidden;background:var(--surface2) center/cover no-repeat;transition:.25s;box-shadow:0 0 0 1px var(--line)}
+.vcard:hover .thumb{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 1px rgba(255,45,61,.5)}
+.thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:.25s;background:linear-gradient(transparent 40%,rgba(0,0,0,.55))}
+.vcard:hover .play,.thumb.noimg .play{opacity:1}
+.play span{width:52px;height:52px;border-radius:50%;background:rgba(255,45,61,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(255,45,61,.5)}
+.play svg{width:22px;height:22px;margin-left:3px}
+.ctag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:500}
+.vinfo{display:flex;gap:11px;margin-top:11px;position:relative}
+.vtxt{min-width:0;flex:1}
+.vt{font-weight:600;font-size:14.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vm{font-size:12.5px;color:var(--mut);margin-top:3px}
+.mod-del-btn{background:rgba(255,45,61,.15);color:#ff7a85;border:1px solid rgba(255,45,61,.3);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:600;margin-top:6px;transition:.2s}
+.mod-del-btn:hover{background:rgba(255,45,61,.3);color:#fff}
+
+/* Shorts */
+.shorts{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;margin-bottom:22px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.shorts::-webkit-scrollbar{display:none}
+.scard{flex:none;width:158px;scroll-snap-align:start;cursor:pointer;animation:up .4s both}
+.scard .thumb{aspect-ratio:9/16;border-radius:16px}
+@media(min-width:620px){.scard{width:190px}}
+
+/* Video Page */
+.watch{display:grid;grid-template-columns:1fr;gap:22px}
+@media(min-width:1000px){.watch{grid-template-columns:minmax(0,1fr) 380px}}
+video.player{width:100%;max-height:72vh;background:#000;border-radius:var(--r);display:block;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.wt{font-size:20px;font-weight:600;margin:16px 0 6px;line-height:1.3}
+.wmeta{color:var(--mut);font-size:13px}
+.wbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}
+.who{display:flex;align-items:center;gap:10px;font-weight:600}
+.who small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lk{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lk button{background:transparent;padding:9px 16px;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:7px;transition:.2s}
+.lk button+button{border-left:1px solid var(--line)}
+.lk button:hover{background:#2a2a34}
+.lk button.on{background:var(--grad);font-weight:600}
+.desc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+
+/* Comments */
+.comm h3{font-size:16px;margin:22px 0 12px}
+.cin{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+.cin input{flex:1;background:transparent;border:0;border-bottom:2px solid var(--line);padding:10px 2px;outline:none;font-size:14px;transition:.2s}
+.cin input:focus{border-color:var(--red)}
+.cm{display:flex;gap:12px;padding:10px 0;animation:up .3s both}
+.cm .avatar{width:34px;height:34px;font-size:14px}
+.cm .b{font-size:13.5px;line-height:1.5;flex:1;min-width:0;word-break:break-word}
+.cm .b small{color:var(--mut);margin-left:6px}
+.cm .b b{font-weight:600}
+
+/* Poki-style Games Hub */
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-top:14px}
+@media(min-width:760px){.game-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}}
+.gcard{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:space-between;padding:18px;cursor:pointer;transition:transform .25s, box-shadow .25s;box-shadow:0 8px 24px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1)}
+.gcard:hover{transform:scale(1.04);box-shadow:0 16px 36px rgba(0,0,0,.5);z-index:2}
+.gcard .gicon{font-size:48px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4));transition:transform .2s}
+.gcard:hover .gicon{transform:scale(1.15) rotate(-5deg)}
+.gcard .gtitle{font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);margin:4px 0 2px}
+.gcard .gcat{font-size:11px;font-weight:700;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);padding:3px 10px;border-radius:999px;width:max-content;color:#fff}
+.gcard .gbtn{background:#fff;color:#000;font-weight:800;border-radius:999px;padding:8px 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;width:max-content;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:.2s}
+.gcard:hover .gbtn{background:var(--red);color:#fff}
+
+/* Game Player View */
+.gframe-container{background:#0a0a0e;border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;position:relative}
+.gheader{width:100%;background:var(--surface);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px}
+.gcanvas-wrap{width:100%;max-width:800px;position:relative;display:flex;justify-content:center;align-items:center;background:#000;padding:10px}
+canvas.gcanvas{background:#111;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.8);max-width:100%;height:auto;touch-action:none}
+.touch-controls{display:flex;gap:12px;justify-content:center;align-items:center;padding:14px;width:100%;background:var(--surface);border-top:1px solid var(--line);flex-wrap:wrap}
+.tbtn{width:56px;height:56px;border-radius:18px;background:var(--surface2);border:1px solid var(--line);font-size:22px;display:flex;align-items:center;justify-content:center;user-select:none;touch-action:manipulation}
+.tbtn:active{background:var(--red);color:#fff;transform:scale(.94)}
+
+/* Moderation Panel */
+.mod-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+.mod-table th,.mod-table td{padding:12px;text-align:left;border-bottom:1px solid var(--line)}
+.mod-table th{color:var(--mut);font-size:12px;text-transform:uppercase;font-weight:600}
+
+/* General Panels & Forms */
+.panel{max-width:480px;margin:30px auto;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:28px 24px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.panel.wide{max-width:850px}
+.panel h2{margin:0 0 4px;font-size:22px}
+.panel p.sub{color:var(--mut);font-size:13px;margin:0 0 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;color:var(--mut);margin-bottom:6px;font-weight:500}
+.field input[type=text],.field input[type=password],.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;font-size:14px;transition:.2s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(255,45,61,.6);box-shadow:0 0 0 4px rgba(255,45,61,.12)}
+.msg{font-size:13px;color:#ff8a93;min-height:20px;margin-bottom:8px}
+.msg.ok{color:#7dffa0}
+.empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:14px}
+.empty .big{font-size:42px;margin-bottom:8px}
+
+/* Navigation */
+nav.bn{position:fixed;left:0;right:0;bottom:0;z-index:60;height:calc(var(--nav) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(14,14,18,.88);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
+nav.bn button{background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--mut);padding:6px 8px;transition:.2s;min-width:52px}
+nav.bn button.on{color:var(--tx)}
+nav.bn svg{width:22px;height:22px}
+
+/* Toast */
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav) + 20px);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 18px;font-size:13.5px;box-shadow:0 14px 40px rgba(0,0,0,.5);animation:up .25s both;pointer-events:auto}
+.toast.err{border-color:rgba(255,45,61,.6)}
+
+/* BAN SCREEN */
+#ban-screen{position:fixed;inset:0;z-index:999999;background:#09090d;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.ban-card{max-width:580px;width:100%;background:rgba(255,45,61,.08);border:2px solid #ff2d3d;border-radius:28px;padding:40px 28px;box-shadow:0 0 100px rgba(255,45,61,.3)}
+.ban-title{color:#ff2d3d;font-size:24px;font-weight:800;margin:16px 0;line-height:1.35;text-transform:uppercase;letter-spacing:-.5px}
+@media(min-width:620px){.ban-title{font-size:28px}}
+.ban-details{background:rgba(0,0,0,.5);border-radius:16px;padding:16px;font-size:13px;color:var(--mut);text-align:left;line-height:1.7;margin-top:20px}
+</style>
+</head>
+<body>
+
+<!-- BAN FULLSCREEN OVERLAY -->
+<div id="ban-screen">
+  <div class="ban-card">
+    <div style="font-size:72px">🚫</div>
+    <div class="ban-title">Topluluk kurallarına aykırı hareketler yaptığınız için atıldınız</div>
+    <p id="ban-reason-text" style="color:#d5d5e0;font-size:15px;line-height:1.6;margin:0 0 20px">
+      Cihazınız veya hesabınız sistem yöneticileri tarafından engellenmiştir.
+    </p>
+    <div class="ban-details" id="ban-info-box"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="hin">
+    <div class="logo" onclick="go('home')">
+      <div class="logo-box">▶</div>
+      <span>Doruk<b>Tube</b></span>
+    </div>
+    <div class="sbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="Video, kanal veya oyun ara..." autocomplete="off">
+    </div>
+    <div class="hr" id="hr"></div>
+  </div>
+</header>
+
+<div class="wrap"><main id="app"></main></div>
+<nav class="bn" id="bn"></nav>
+<div id="toasts"></div>
+
+<script>
+const SUPABASE_URL = "https://wawkbelprkrhfyngcaei.supabase.co";
+const SUPABASE_KEY = "sb_publishable_tquuOepSjSv6sGn9-esPlg_80qCTMo9";
+const FAKE_DOMAIN = "@doruktube.app";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let me = null, myName = null;
+let route = {page:'home'};
+let allVideos = [], cats = [];
+let typeF = 'all', catF = null, query = '';
+let mySubs = new Set(), notifs = [], myMods = [];
+let myDeviceFP = '', isBanned = false;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const emailOf = u => u.toLowerCase() + FAKE_DOMAIN;
+const unread = () => notifs.filter(n => !n.is_read).length;
+const catOf = id => cats.find(c => c.id === id);
+
+/* ---------- CİHAZ PARMAK İZİ (DEVICE FINGERPRINT) ---------- */
+async function getDeviceFP() {
+  let uuid = localStorage.getItem('dt_dfp');
+  if(!uuid) {
+    uuid = 'fp_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+    localStorage.setItem('dt_dfp', uuid);
+  }
+  let canvasSig = '';
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200; canvas.height = 40;
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = "top"; ctx.font = "14px 'Arial'";
+    ctx.fillStyle = "#f60"; ctx.fillRect(100, 5, 50, 20);
+    ctx.fillStyle = "#069"; ctx.fillText("DorukTube,FP 😃", 2, 10);
+    canvasSig = canvas.toDataURL().slice(-40);
+  } catch(e){}
+
+  const raw = [
+    uuid,
+    canvasSig,
+    screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
+    navigator.hardwareConcurrency || 4,
+    navigator.language,
+    new Date().getTimezoneOffset()
+  ].join('||');
+
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'DTFP-' + Math.abs(hash).toString(36).toUpperCase() + '-' + uuid.slice(-6);
+}
+
+async function checkBanStatus() {
+  myDeviceFP = await getDeviceFP();
+  let q = sb.from('banned_devices').select('*');
+  if(myName) q = q.or(`device_fp.eq.${myDeviceFP},username.eq.${myName}`);
+  else q = q.eq('device_fp', myDeviceFP);
+
+  const { data } = await q;
+  if(data && data.length > 0) {
+    const banInfo = data[0];
+    isBanned = true;
+    $('#ban-reason-text').textContent = banInfo.reason || 'Topluluk kurallarına aykırı hareketler yaptığınız için atıldınız';
+    $('#ban-info-box').innerHTML = `
+      <div><b>Engelleyen:</b> @${esc(banInfo.banned_by || 'Yönetici')}</div>
+      <div><b>Tarih:</b> ${new Date(banInfo.created_at || Date.now()).toLocaleString('tr-TR')}</div>
+      <div><b>Cihaz FP:</b> <code style="color:#ff8a93">${esc(myDeviceFP)}</code></div>
+    `;
+    $('#ban-screen').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    return true;
+  }
+  isBanned = false;
+  return false;
+}
+
+/* ---------- YETKİLENDİRME (MOD & ADMIN) ---------- */
+function isSuperAdmin(){ return myName && myName.toLowerCase() === 'doruktube'; }
+function isMod(){ return isSuperAdmin() || (myName && myMods.includes(myName)); }
+
+async function loadMods() {
+  try {
+    const { data } = await sb.from('moderators').select('username');
+    myMods = (data || []).map(m => m.username);
+  } catch(e){}
+}
+
+/* ---------- İKONLAR ---------- */
+const I = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+  game:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="8" cy="12" r="1.5"/><path d="M14 10h4M16 8v4"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5 6.5-5s5.7 1.5 6.5 5"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21a2 2 0 0 0 4 0"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M7 4v16l14-8z"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+};
+
+function toast(t, kind){
+  const d = document.createElement('div'); d.className = 'toast' + (kind==='err'?' err':''); d.textContent = t;
+  $('#toasts').appendChild(d); setTimeout(()=>d.remove(), 4000);
+}
+function ago(ts){
+  const s = Math.max(1, (Date.now() - new Date(ts)) / 1000);
+  const u = [[31536000,'yıl'],[2592000,'ay'],[86400,'gün'],[3600,'saat'],[60,'dk']];
+  for(const [n,l] of u) if(s >= n) return Math.floor(s/n) + ' ' + l + ' önce';
+  return 'az önce';
+}
+function av(name, cls=''){
+  let h = 0; for(const c of String(name)) h = (h*31 + c.charCodeAt(0)) % 360;
+  return `<div class="avatar ${cls}" style="background:linear-gradient(135deg,hsl(${h} 80% 55%),hsl(${(h+40)%360} 80% 45%))">${esc(String(name)[0]?.toUpperCase()||'?')}</div>`;
+}
+const fmt = n => n >= 1e6 ? (n/1e6).toFixed(1)+' Mn' : n >= 1e3 ? (n/1e3).toFixed(1)+' B' : String(n);
+
+/* ---------- OTURUM & YÖNLENDİRME ---------- */
+function setUser(u){
+  me = u || null; myName = u?.user_metadata?.username || null;
+  if(me) loadUserData();
+  checkBanStatus();
+  header();
+}
+async function loadUserData(){
+  const [s, n] = await Promise.all([
+    sb.from('subscriptions').select('channel_id').eq('subscriber_id', me.id),
+    sb.from('notifications').select('*').eq('user_id', me.id).order('created_at',{ascending:false}).limit(40)
+  ]);
+  mySubs = new Set((s.data||[]).map(x => x.channel_id));
+  notifs = n.data || [];
+  await loadMods();
+  header();
+}
+
+function header(){
+  const h = $('#hr');
+  let btns = `<button class="btn" onclick="go('games')">${I.game} Oyunlar</button>`;
+  if(isMod()){
+    btns += `<button class="btn mod-btn" onclick="go('mod')">${I.shield} Mod Paneli</button>`;
+  }
+  if(me){
+    btns += `<button class="btn hdesk" onclick="go('live')">🔴 Canlı</button>
+      <button class="btn pri hdesk" onclick="go('upload')">${I.plus} Yükle</button>
+      <button class="ibtn" onclick="go('notifications')">${I.bell}${unread()?`<span class="badge">${unread()}</span>`:''}</button>
+      <div class="lnk" onclick="go('channel','${myName}')">${av(myName)}</div>`;
+  } else {
+    btns += `<button class="btn pri" onclick="go('auth')">Giriş Yap</button>`;
+  }
+  h.innerHTML = btns;
+  bottomNav();
+}
+
+function bottomNav(){
+  const p = route.page;
+  $('#bn').innerHTML = `
+    <button class="${p==='home'?'on':''}" onclick="go('home')">${I.home}Ana Sayfa</button>
+    <button class="${p==='games'||p==='playgame'?'on':''}" onclick="go('games')">${I.game}Oyunlar</button>
+    <button onclick="go('upload')"><span style="background:var(--grad);color:#fff;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,45,61,.4)">${I.plus}</span></button>
+    <button class="${p==='channels'?'on':''}" onclick="go('channels')">${I.users}Kanallar</button>
+    <button class="${p==='auth'||p==='mod'?'on':''}" onclick="${me?`go('channel','${myName}')`:"go('auth')"}">${me?av(myName):I.home}${me?'Profil':'Giriş'}</button>`;
+}
+
+function parseHash(){
+  const h = location.hash.replace(/^#\/?/, '').split('/');
+  if(h[0]==='video' && h[1]) return {page:'video', id:+h[1]};
+  if(h[0]==='playgame' && h[1]) return {page:'playgame', id:h[1]};
+  if(h[0]==='c' && h[1]) return {page:'channel', id:decodeURIComponent(h[1])};
+  if(['auth','upload','channels','notifications','live','golive','games','mod'].includes(h[0])) return {page:h[0]};
+  return {page:'home'};
+}
+function go(page, id){
+  if(isBanned) return;
+  const t = page==='home'?'':page==='video'?'video/'+id:page==='playgame'?'playgame/'+id:page==='channel'?'c/'+encodeURIComponent(id):page;
+  location.hash = '#/' + t;
+}
+window.addEventListener('hashchange', () => { route = parseHash(); header(); render(); window.scrollTo(0,0); });
+
+async function render(){
+  if(isBanned) return;
+  const app = $('#app');
+  const routes = { home, video:videoPage, channel:channelPage, channels:channelsPage, notifications:notifPage, auth:authPage, upload:uploadPage, games:gamesPage, playgame:playGamePage, mod:modPage };
+  const r = routes[route.page] || home;
+  r(app, route.id);
+}
+
+/* ---------- VİDEO SİLME (MOD / SAHİP) ---------- */
+async function deleteVideo(vid, e) {
+  if(e) e.stopPropagation();
+  if(!confirm('Bu videoyu silmek istediğinize emin misiniz?')) return;
+  const { error } = await sb.from('videos').delete().eq('id', vid);
+  if(error) return toast('Silinemedi: ' + error.message, 'err');
+  toast('Video silindi');
+  allVideos = allVideos.filter(v => v.id !== vid);
+  render();
+}
+
+/* ---------- VİDEO KARTLARI ---------- */
+function card(v){
+  const canDel = isMod() || (me && me.id === v.user_id);
+  return `<div class="vcard" onclick="go('video',${v.id})">
+    <div class="thumb ${v.thumb_url?'':'noimg'}" ${v.thumb_url?`style="background-image:url('${esc(v.thumb_url)}')"`:''}>
+      <div class="play"><span>${I.play}</span></div>
+    </div>
+    <div class="vinfo">
+      <div onclick="event.stopPropagation();go('channel','${v.username}')">${av(v.username)}</div>
+      <div class="vtxt">
+        <div class="vt">${esc(v.title)}</div>
+        <div class="vm">@${esc(v.username)} · ${fmt(v.views||0)} izlenme</div>
+        ${canDel ? `<button class="mod-del-btn" onclick="deleteVideo(${v.id}, event)">🗑️ Sil (Mod)</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- ANA SAYFA ---------- */
+async function home(app){
+  app.innerHTML = '<div class="empty">Yükleniyor...</div>';
+  const { data } = await sb.from('videos').select('*').order('created_at',{ascending:false}).limit(100);
+  allVideos = data || [];
+  app.innerHTML = `<h2 class="sec"><i></i>Öne Çıkan Videolar</h2><div class="grid">${allVideos.map(card).join('')}</div>`;
+}
+
+/* ---------- POKİ TARZI OYUN PORTALI ---------- */
+const GAMES = [
+  { id: 'flappy', name: 'Flappy Doruk', cat: 'Arcade', icon: '🐣', desc: 'Borulardan kaç ve en yüksek skoru yap!', bg: 'linear-gradient(135deg, #ff416c, #ff4b2b)' },
+  { id: 'snake', name: 'Yılan Oyunu', cat: 'Arcade', icon: '🐍', desc: 'Yemleri topla, uzadıkça kendine çarpma!', bg: 'linear-gradient(135deg, #11998e, #38ef7d)' },
+  { id: 'breakout', name: 'Tuğla Kırma', cat: 'Retro', icon: '🧱', desc: 'Topu düşürmeden tüm tuğlaları kır!', bg: 'linear-gradient(135deg, #fc4a1a, #f7b733)' },
+  { id: 'space', name: 'Uzay Savaşı', cat: 'Aksiyon', icon: '🚀', desc: 'Düşman gemilerini vurun ve hayatta kalın!', bg: 'linear-gradient(135deg, #8A2387, #E94057, #F27121)' },
+  { id: 'puzzle2048', name: '2048', cat: 'Bulmaca', icon: '🔢', desc: 'Sayıları birleştir 2048 karosuna ulaş!', bg: 'linear-gradient(135deg, #4776E6, #8E54E9)' },
+  { id: 'memory', name: 'Hafıza Kartları', cat: 'Bulmaca', icon: '🃏', desc: 'Eşleşen sembolleri zaman bitmeden bul!', bg: 'linear-gradient(135deg, #f857a6, #ff5858)' },
+  { id: 'tictactoe', name: 'Tic-Tac-Toe', cat: 'Bulmaca', icon: '❌', desc: 'Yapay zekaya karşı 3 yan yana yap!', bg: 'linear-gradient(135deg, #00c6ff, #0072ff)' }
+];
+
+function gamesPage(app){
+  let filter = 'Tümü';
+  const renderGames = (cat) => {
+    filter = cat;
+    const filtered = cat==='Tümü' ? GAMES : GAMES.filter(g => g.cat === cat);
+    $('#g-list').innerHTML = filtered.map(g => `
+      <div class="gcard" style="background:${g.bg}" onclick="go('playgame','${g.id}')">
+        <div class="gcat">${g.cat}</div>
+        <div class="gicon">${g.icon}</div>
+        <div>
+          <div class="gtitle">${g.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:12px">${g.desc}</div>
+          <div class="gbtn">Oyna ▶</div>
+        </div>
+      </div>
+    `).join('');
+  };
+
+  const cats = ['Tümü', 'Arcade', 'Bulmaca', 'Aksiyon', 'Retro'];
+  app.innerHTML = `
+    <h2 class="sec"><i></i>🎮 Poki Oyun Portalı</h2>
+    <div class="chips">
+      ${cats.map(c => `<button class="chip ${c==='Tümü'?'on':''}" onclick="document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));this.classList.add('on');window._renderG('${c}')">${c}</button>`).join('')}
+    </div>
+    <div class="game-grid" id="g-list"></div>
+  `;
+  window._renderG = renderGames;
+  renderGames('Tümü');
+}
+
+/* ---------- OYUN MOTORLARI (PLAYABLE MINI GAMES) ---------- */
+let gameLoopId = null;
+
+function playGamePage(app, gameId){
+  const g = GAMES.find(x => x.id === gameId);
+  if(!g) return go('games');
+
+  app.innerHTML = `
+    <div class="gframe-container">
+      <div class="gheader">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn" onclick="go('games')">⬅ Oyunlar</button>
+          <span style="font-size:18px;font-weight:800">${g.icon} ${g.name}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:14px;font-weight:700">Skor: <b id="g-score" style="color:var(--red)">0</b></span>
+          <button class="btn" onclick="initGame('${g.id}')">🔄 Yeniden Başlat</button>
+        </div>
+      </div>
+      <div class="gcanvas-wrap">
+        <canvas id="gc" class="gcanvas" width="400" height="500"></canvas>
+      </div>
+      <div class="touch-controls" id="g-touch"></div>
+    </div>
+  `;
+  initGame(gameId);
+}
+
+function initGame(id){
+  if(gameLoopId) cancelAnimationFrame(gameLoopId);
+  const canvas = $('#gc');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let score = 0;
+  const setScore = s => { score = s; if($('#g-score')) $('#g-score').textContent = s; };
+
+  if(id === 'flappy') {
+    let birdY = 200, velocity = 0, pipes = [];
+    $('#g-touch').innerHTML = `<button class="tbtn" style="width:140px;background:var(--grad);color:#fff" id="b-jump">Zıpla 🚀</button>`;
+    const jump = () => velocity = -6;
+    $('#b-jump').onclick = jump;
+    canvas.onclick = jump;
+    window.onkeydown = e => { if(e.code==='Space') jump(); };
+
+    function loop(){
+      velocity += 0.35; birdY += velocity;
+      if(Math.random()<0.02) pipes.push({x:400, top:Math.random()*200+50});
+      ctx.fillStyle = '#111'; ctx.fillRect(0,0,400,500);
+      ctx.fillStyle = '#ff2d3d'; ctx.beginPath(); ctx.arc(80, birdY, 14, 0, Math.PI*2); ctx.fill();
+
+      for(let i=pipes.length-1; i>=0; i--){
+        pipes[i].x -= 2.5;
+        ctx.fillStyle = '#38ef7d';
+        ctx.fillRect(pipes[i].x, 0, 45, pipes[i].top);
+        ctx.fillRect(pipes[i].x, pipes[i].top + 130, 45, 500);
+        if(pipes[i].x === 80) setScore(score + 1);
+        if(pipes[i].x < 100 && pipes[i].x > 45 && (birdY < pipes[i].top || birdY > pipes[i].top + 130)) return initGame('flappy');
+      }
+      if(birdY > 500 || birdY < 0) return initGame('flappy');
+      gameLoopId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+  else if(id === 'snake') {
+    let snake = [{x:10,y:10}], dir = {x:1,y:0}, food = {x:5,y:5};
+    $('#g-touch').innerHTML = `
+      <button class="tbtn" id="b-u">⬆</button>
+      <div style="display:flex;gap:10px">
+        <button class="tbtn" id="b-l">⬅</button>
+        <button class="tbtn" id="b-d">⬇</button>
+        <button class="tbtn" id="b-r">➡</button>
+      </div>`;
+    $('#b-u').onclick = ()=> dir={x:0,y:-1}; $('#b-d').onclick = ()=> dir={x:0,y:1};
+    $('#b-l').onclick = ()=> dir={x:-1,y:0}; $('#b-r').onclick = ()=> dir={x:1,y:0};
+    window.onkeydown = e => {
+      if(e.key==='ArrowUp') dir={x:0,y:-1}; if(e.key==='ArrowDown') dir={x:0,y:1};
+      if(e.key==='ArrowLeft') dir={x:-1,y:0}; if(e.key==='ArrowRight') dir={x:1,y:0};
+    };
+
+    let tick = 0;
+    function loop(){
+      if(++tick % 6 === 0) {
+        const head = {x:snake[0].x + dir.x, y:snake[0].y + dir.y};
+        if(head.x<0||head.x>=20||head.y<0||head.y>=25) return initGame('snake');
+        snake.unshift(head);
+        if(head.x===food.x && head.y===food.y){
+          setScore(score+10);
+          food = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*25)};
+        } else snake.pop();
+      }
+      ctx.fillStyle = '#0e0e12'; ctx.fillRect(0,0,400,500);
+      ctx.fillStyle = '#ff6a3d'; ctx.fillRect(food.x*20, food.y*20, 18, 18);
+      ctx.fillStyle = '#38ef7d'; snake.forEach(s=>ctx.fillRect(s.x*20, s.y*20, 18, 18));
+      gameLoopId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+  else if(id === 'breakout') {
+    let px = 160, bx = 200, by = 300, dx = 3, dy = -3;
+    let bricks = []; for(let r=0;r<4;r++) for(let c=0;c<6;c++) bricks.push({x:c*64+8, y:r*24+40, live:1});
+    canvas.onmousemove = e => px = e.offsetX - 40;
+    canvas.ontouchmove = e => px = e.touches[0].clientX - canvas.getBoundingClientRect().left - 40;
+
+    function loop(){
+      bx += dx; by += dy;
+      if(bx<0 || bx>400) dx = -dx;
+      if(by<0) dy = -dy;
+      if(by>470 && bx>px && bx<px+80) dy = -dy;
+      if(by>500) return initGame('breakout');
+
+      bricks.forEach(b=>{
+        if(b.live && bx>b.x && bx<b.x+60 && by>b.y && by<b.y+20){
+          b.live = 0; dy = -dy; setScore(score+20);
+        }
+      });
+      ctx.fillStyle = '#111'; ctx.fillRect(0,0,400,500);
+      ctx.fillStyle = '#00c6ff'; ctx.fillRect(px, 470, 80, 12);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bx,by,7,0,Math.PI*2); ctx.fill();
+      bricks.forEach(b=>{ if(b.live){ ctx.fillStyle='#ff416c'; ctx.fillRect(b.x,b.y,58,18); } });
+      gameLoopId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+  else {
+    ctx.fillStyle = '#17171d'; ctx.fillRect(0,0,400,500);
+    ctx.fillStyle = '#fff'; ctx.font = "20px Lexend"; ctx.textAlign = "center";
+    ctx.fillText("🎮 Oyun Hazır!", 200, 240);
+  }
+}
+
+/* ---------- MODERATÖR & BAN PANATİ (ADMIN PANEL) ---------- */
+async function modPage(app){
+  if(!isMod()){
+    app.innerHTML = '<div class="empty"><div class="big">🔒</div>Bu sayfaya erişim yetkiniz yok.</div>';
+    return;
+  }
+  app.innerHTML = '<div class="panel wide"><h2>🛡️ Moderatör & Ban Paneli</h2><p class="sub">Sunucu güvenliği, cihaz engelleme ve moderasyon yönetimi.</p><div id="mod-content">Yükleniyor...</div></div>';
+  renderModContent();
+}
+
+async function renderModContent(){
+  const container = $('#mod-content');
+  if(!container) return;
+
+  const [{ data: bans }, { data: mods }] = await Promise.all([
+    sb.from('banned_devices').select('*').order('created_at', {ascending:false}),
+    sb.from('moderators').select('*')
+  ]);
+
+  let html = '';
+
+  // 1) Moderatör Ekle/Çıkar (Sadece @doruktube)
+  if(isSuperAdmin()){
+    html += `
+      <div style="background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:20px">
+        <h3 style="margin:0 0 10px;font-size:16px">👑 Moderatör Ekle (Sadece Admin)</h3>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="mod-username-input" placeholder="Kullanıcı adı" style="flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;outline:none">
+          <button class="btn pri" onclick="addMod()">Ekle</button>
+        </div>
+        <div style="margin-top:12px">
+          <b>Mevcut Moderatörler:</b> ${(mods||[]).map(m => `<span style="background:var(--bg);padding:4px 10px;border-radius:8px;margin-right:6px;font-size:12px">@${esc(m.username)} <b style="color:var(--red);cursor:pointer" onclick="removeMod('${m.user_id}')">✕</b></span>`).join('') || 'Henüz moderatör yok.'}
+        </div>
+      </div>
+    `;
+  }
+
+  // 2) Banlama Formu
+  html += `
+    <div style="background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:20px">
+      <h3 style="margin:0 0 10px;font-size:16px">⛔ Kullanıcı / Cihaz Banla</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <input type="text" id="ban-target" placeholder="Kullanıcı Adı veya Cihaz FP" style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;outline:none">
+        <input type="text" id="ban-reason" placeholder="Ban Sebebi (Opsiyonel)" value="Topluluk kurallarına aykırı hareketler yaptığınız için atıldınız" style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;outline:none">
+      </div>
+      <button class="btn pri" style="width:100%" onclick="executeBan()">Cihazı & Hesabı Kalıcı Banla</button>
+    </div>
+
+    <h3>🚫 Engellenmiş Cihazlar ve Kullanıcılar (${(bans||[]).length})</h3>
+    <table class="mod-table">
+      <thead>
+        <tr>
+          <th>Kullanıcı / Cihaz FP</th>
+          <th>Sebep</th>
+          <th>Engelleyen</th>
+          <th>Tarih</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${(bans||[]).map(b => `
+          <tr>
+            <td>
+              <b>${b.username ? '@'+esc(b.username) : 'Anonim'}</b><br>
+              <code style="font-size:11px;color:var(--mut)">${esc(b.device_fp)}</code>
+            </td>
+            <td>${esc(b.reason)}</td>
+            <td>@${esc(b.banned_by)}</td>
+            <td>${new Date(b.created_at).toLocaleDateString('tr-TR')}</td>
+            <td><button class="btn" style="padding:4px 10px;font-size:12px" onclick="unban('${b.id}')">Ban Kaldır</button></td>
+          </tr>
+        `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--mut)">Henüz engellenmiş cihaz yok.</td></tr>'}
+      </tbody>
+    </table>
+  `;
+
+  container.innerHTML = html;
+}
+
+async function addMod(){
+  const uname = $('#mod-username-input').value.trim();
+  if(!uname) return toast('Kullanıcı adı yazın', 'err');
+  const { data: p } = await sb.from('profiles').select('id').eq('username', uname).single();
+  if(!p) return toast('Kullanıcı bulunamadı', 'err');
+
+  const { error } = await sb.from('moderators').insert({ user_id: p.id, username: uname });
+  if(error) return toast('Hata: ' + error.message, 'err');
+  toast('Moderatör eklendi');
+  await loadMods(); renderModContent();
+}
+
+async function removeMod(uid){
+  const { error } = await sb.from('moderators').delete().eq('user_id', uid);
+  if(error) return toast('Hata: ' + error.message, 'err');
+  toast('Moderatör çıkarıldı');
+  await loadMods(); renderModContent();
+}
+
+async function executeBan(){
+  const target = $('#ban-target').value.trim();
+  const reason = $('#ban-reason').value.trim();
+  if(!target) return toast('Kullanıcı adı veya Cihaz FP girin', 'err');
+
+  let device_fp = target.startsWith('DTFP-') ? target : 'DTFP-GENERIC-' + target;
+  let username = target.startsWith('DTFP-') ? null : target;
+
+  const { error } = await sb.from('banned_devices').insert({
+    device_fp,
+    username,
+    reason,
+    banned_by: myName
+  });
+
+  if(error) return toast('Banlanamadı: ' + error.message, 'err');
+  toast('Cihaz/Kullanıcı banlandı ⛔');
+  renderModContent();
+}
+
+async function unban(id){
+  const { error } = await sb.from('banned_devices').delete().eq('id', id);
+  if(error) return toast('Kaldırılamadı: ' + error.message, 'err');
+  toast('Ban kaldırıldı');
+  renderModContent();
+}
+
+/* ---------- DİĞER SAYFALAR ---------- */
+function authPage(app){
+  app.innerHTML = `
+    <div class="panel">
+      <h2>Giriş / Kayıt 👋</h2>
+      <div class="field"><label>Kullanıcı adı</label><input type="text" id="un"></div>
+      <div class="field"><label>Şifre</label><input type="password" id="pw"></div>
+      <div class="msg" id="msg"></div>
+      <button class="btn pri" style="width:100%;padding:12px" onclick="login()">Giriş Yap / Kayıt Ol</button>
+    </div>`;
+}
+async function login(){
+  const u = $('#un').value.trim(), p = $('#pw').value;
+  if(!u || !p) return $('#msg').textContent = 'Tüm alanları doldurun';
+  let { data, error } = await sb.auth.signInWithPassword({ email: emailOf(u), password: p });
+  if(error) {
+    const reg = await sb.auth.signUp({ email: emailOf(u), password: p, options:{ data:{ username: u } } });
+    if(reg.error) return $('#msg').textContent = reg.error.message;
+  }
+  toast('Oturum açıldı');
+  go('home');
+}
+function uploadPage(app){ app.innerHTML = '<div class="panel"><h2>Video Yükle</h2><p class="sub">Videolarınızı yükleyin.</p></div>'; }
+function channelPage(app, name){ app.innerHTML = `<h2 class="sec"><i></i>@${esc(name)}</h2>`; }
+function channelsPage(app){ app.innerHTML = '<h2 class="sec"><i></i>Kanallar</h2>'; }
+function notifPage(app){ app.innerHTML = '<h2 class="sec"><i></i>Bildirimler</h2>'; }
+function videoPage(app, id){ app.innerHTML = `<h2 class="sec"><i></i>Video #${id}</h2>`; }
+function livePage(app){ app.innerHTML = '<h2 class="sec"><i></i>Canlı Yayınlar</h2>'; }
+
+/* ---------- BAŞLAT ---------- */
+(async()=>{
+  route = parseHash();
+  const { data: { session } } = await sb.auth.getSession();
+  setUser(session?.user);
+  sb.auth.onAuthStateChange((_e,s)=>setUser(s?.user));
+  render();
+})();
+</script>
+</body>
+</html>
