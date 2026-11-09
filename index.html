@@ -80,7 +80,9 @@ h2.sec i{width:4px;height:18px;border-radius:4px;background:var(--grad);display:
 .ctag{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:500}
 .vinfo{display:flex;gap:11px;margin-top:11px}
 .vtxt{min-width:0}
-.vt{font-weight:600;font-size:14.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vt{color:var(--tx);font-weight:600;font-size:14.5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;min-width:0}
+.vt:empty{display:none}
+.wt{color:var(--tx);overflow-wrap:anywhere;min-width:0}
 .vm{font-size:12.5px;color:var(--mut);margin-top:3px}
 
 /* Shorts */
@@ -445,8 +447,13 @@ function uniqueVideos(items){
     return true;
   });
 }
-function needsRename(v){ return !String(v?.title || '').trim(); }
-function displayTitle(v){ return needsRename(v) ? 'Yeniden adlandırılmalı' : v.title; }
+function cleanVideoTitle(v){
+  const raw = v?.title ?? v?.video_title ?? v?.name ?? '';
+  const title = String(raw).trim();
+  return (!title || ['null','undefined','[object object]'].includes(title.toLowerCase())) ? '' : title;
+}
+function needsRename(v){ return !cleanVideoTitle(v); }
+function displayTitle(v){ return cleanVideoTitle(v) || 'Başlık yeniden girilmeli'; }
 function recoveryEditor(v){
   if(!me || me.id !== v.user_id || !needsRename(v)) return '';
   return `<div class="panel wide" style="margin:16px 0;border:1px solid #e5a000">
@@ -545,7 +552,7 @@ function list(){
     if(typeF==='subs' && !mySubs.has(v.user_id)) return false;
     if(!q) return true;
     const c = catOf(v.category_id);
-    return String(v.title || '').toLowerCase().includes(q) || v.username.toLowerCase().includes(q) || (v.topic||'').toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
+    return cleanVideoTitle(v).toLowerCase().includes(q) || String(v.username || '').toLowerCase().includes(q) || (v.topic||'').toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
   });
   const gifs = f.filter(v=>v.media_type==='gif'), vids = f.filter(v=>!v.is_short && v.media_type!=='gif'), sh = f.filter(v=>v.is_short && v.media_type!=='gif');
   let h = '';
@@ -598,7 +605,7 @@ async function videoPage(app, id){
   const c = catOf(v.category_id);
   app.innerHTML = `<div class="watch">
     <div>
-      ${v.media_type==='gif' ? `<img class="player" src="${esc(v.video_url)}" alt="${esc(v.title)}">` : `<video class="player" src="${esc(v.video_url)}" poster="${esc(v.thumb_url||'')}" controls playsinline autoplay></video>`}
+      ${v.media_type==='gif' ? `<img class="player" src="${esc(v.video_url)}" alt="${esc(displayTitle(v))}">` : `<video class="player" src="${esc(v.video_url)}" poster="${esc(v.thumb_url||'')}" controls playsinline autoplay></video>`}
       <h1 class="wt">${esc(displayTitle(v))}</h1>
       ${me && me.id===v.user_id && needsRename(v) ? recoveryEditor(v) : ''}
       <div class="wmeta">${fmt(v.views)} izlenme · ${ago(v.created_at)}</div>
