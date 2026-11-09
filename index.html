@@ -435,6 +435,60 @@ async function render(){
 }
 $('#q').addEventListener('input', e => { query = e.target.value; if(route.page==='channels') channelsPage($('#app')); else if(route.page!=='home') go('home'); else list(); });
 
+/* ---------- Video veri düzeltmeleri ---------- */
+function uniqueVideos(items){
+  const seen = new Set();
+  return (items || []).filter(v => {
+    const key = v.video_url || `id:${v.id}`;
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function needsRename(v){ return !String(v?.title || '').trim(); }
+function displayTitle(v){ return needsRename(v) ? 'Yeniden adlandırılmalı' : v.title; }
+function recoveryEditor(v){
+  if(!me || me.id !== v.user_id || !needsRename(v)) return '';
+  return `<div class="panel wide" style="margin:16px 0;border:1px solid #e5a000">
+    <h3>⚠️ Video bilgilerini yeniden gir</h3>
+    <p class="sub">Maalesef yaşadığımız sorundan ilgili, videoların adları silindi. Lütfen videolarınızın adını tekrar yazar mısınız?</p>
+    <div class="field"><label>Yeni başlık</label><input id="recoverTitle" type="text" maxlength="100" placeholder="Video başlığını yaz"></div>
+    <div class="field"><label>Kategori (isteğe bağlı)</label><select id="recoverCat"><option value="">Kategori seç</option>${cats.map(c=>`<option value="${c.id}">${c.emoji} ${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Konu (etiket)</label><input id="recoverTopic" type="text" maxlength="60" placeholder="Konu"></div>
+    <div class="field"><label>Açıklama</label><textarea id="recoverDesc" rows="4" maxlength="1000" placeholder="Açıklama"></textarea></div>
+    <div class="msg" id="recoverMsg"></div>
+    <button class="btn pri" id="recoverSave" onclick="saveRecoveredVideo(${Number(v.id)})">Bilgileri kaydet</button>
+  </div>`;
+}
+async function saveRecoveredVideo(id){
+  if(!me) return;
+  const title = ($('#recoverTitle')?.value || '').trim();
+  const description = ($('#recoverDesc')?.value || '').trim();
+  const topic = ($('#recoverTopic')?.value || '').trim();
+  const category = $('#recoverCat')?.value || '';
+  const status = $('#recoverMsg');
+  if(!title){ if(status) status.textContent='Lütfen video başlığını yaz.'; return; }
+  const button = $('#recoverSave'); if(button) button.disabled = true;
+  if(status) status.textContent='Kaydediliyor...';
+  const update = {title, description, topic, category_id:category ? Number(category) : null};
+  const {data,error} = await sb.from('videos').update(update).eq('id',id).eq('user_id',me.id).select().single();
+  if(error || !data){ if(status) status.textContent='Kaydedilemedi: '+(error?.message || 'Video bulunamadı.'); if(button) button.disabled=false; return; }
+  allVideos = allVideos.map(v => String(v.id)===String(id) ? {...v,...data} : v);
+  toast('Video bilgileri kaydedildi ✓');
+  go('video', id);
+}
+function renderRecoveryNotice(){
+  const el = $('#recoveryNotice');
+  if(!el || !me) return;
+  const pending = uniqueVideos(allVideos).filter(v => v.user_id===me.id && needsRename(v));
+  if(!pending.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="panel wide" style="margin:0 0 18px;border:1px solid #e5a000">
+    <h3>⚠️ Video bilgilerini yenilemen gerekiyor!</h3>
+    <p>Maalesef yaşadığımız sorundan ilgili, videoların adları silindi. Lütfen videolarınızın adını tekrar yazar mısınız?</p>
+    <button class="btn pri" onclick="go('video',${Number(pending[0].id)})">Videolarımı yeniden adlandır (${pending.length})</button>
+  </div>`;
+}
+
 /* ---------- Kartlar ---------- */
 function thumbHtml(v, tag){
   const bg = v.thumb_url ? `style="background-image:url('${esc(v.thumb_url)}')"` : '';
@@ -445,14 +499,14 @@ function card(v, i=0){
   return `<div class="vcard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('video',${v.id})">
     ${thumbHtml(v, true)}
     <div class="vinfo"><div onclick="event.stopPropagation();go('channel','${q1(v.username)}')">${av(v.username)}</div><div class="vtxt">
-      <div class="vt">${esc(v.title)}</div>
+      <div class="vt">${esc(displayTitle(v))}</div>
       <div class="vm">@${esc(v.username)}<br>${fmt(v.views||0)} izlenme · ${ago(v.created_at)}</div>
     </div></div></div>`;
 }
 function scard(v, i=0){
   return `<div class="scard" style="animation-delay:${Math.min(i,12)*40}ms" onclick="go('video',${v.id})">
     ${thumbHtml(v, true)}
-    <div class="vt" style="margin-top:9px;font-size:13.5px">${esc(v.title)}</div>
+    <div class="vt" style="margin-top:9px;font-size:13.5px">${esc(displayTitle(v))}</div>
     <div class="vm">@${esc(v.username)} · ${fmt(v.views||0)}</div></div>`;
 }
 function skeleton(n=8){
@@ -473,8 +527,9 @@ async function home(app){
   liveNow = lv || [];
   if(route.page!=='home') return;
   if(error){ app.innerHTML = `<div class="empty"><div class="big">⚠️</div>Hata: ${esc(error.message)}<br><span class="hint">SQL kodlarını çalıştırdın mı?</span></div>`; return; }
-  allVideos = data || [];
-  app.innerHTML = `<div class="chips" id="chips"></div><div class="chips" id="cchips"></div><div id="list"></div>`;
+  allVideos = uniqueVideos(data || []);
+  app.innerHTML = `<div id="recoveryNotice"></div><div class="chips" id="chips"></div><div class="chips" id="cchips"></div><div id="list"></div>`;
+  renderRecoveryNotice();
   list();
 }
 function list(){
@@ -485,12 +540,12 @@ function list(){
   $('#cchips').innerHTML = cats.length ? [`<button class="chip cat ${catF===null?'on':''}" onclick="catF=null;list()">Tüm kategoriler</button>`,
     ...cats.map(c => `<button class="chip cat ${catF===c.id?'on':''}" onclick="catF=${c.id};list()">${c.emoji} ${esc(c.name)}</button>`)].join('') : '';
   const q = query.trim().toLowerCase();
-  const f = allVideos.filter(v => {
+  const f = uniqueVideos(allVideos).filter(v => {
     if(catF!==null && v.category_id!==catF) return false;
     if(typeF==='subs' && !mySubs.has(v.user_id)) return false;
     if(!q) return true;
     const c = catOf(v.category_id);
-    return v.title.toLowerCase().includes(q) || v.username.toLowerCase().includes(q) || (v.topic||'').toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
+    return String(v.title || '').toLowerCase().includes(q) || v.username.toLowerCase().includes(q) || (v.topic||'').toLowerCase().includes(q) || (c && c.name.toLowerCase().includes(q));
   });
   const gifs = f.filter(v=>v.media_type==='gif'), vids = f.filter(v=>!v.is_short && v.media_type!=='gif'), sh = f.filter(v=>v.is_short && v.media_type!=='gif');
   let h = '';
@@ -544,16 +599,17 @@ async function videoPage(app, id){
   app.innerHTML = `<div class="watch">
     <div>
       ${v.media_type==='gif' ? `<img class="player" src="${esc(v.video_url)}" alt="${esc(v.title)}">` : `<video class="player" src="${esc(v.video_url)}" poster="${esc(v.thumb_url||'')}" controls playsinline autoplay></video>`}
-      <h1 class="wt">${esc(v.title)}</h1>
+      <h1 class="wt">${esc(displayTitle(v))}</h1>
+      ${me && me.id===v.user_id && needsRename(v) ? recoveryEditor(v) : ''}
       <div class="wmeta">${fmt(v.views)} izlenme · ${ago(v.created_at)}</div>
       <div class="wbar">
         <div class="who"><div class="lnk" onclick="go('channel','${q1(v.username)}')">${av(v.username)}</div>
           <div><span class="lnk" onclick="go('channel','${q1(v.username)}')">@${esc(v.username)}</span><small><span id="sc" data-n="${sc}">${fmt(sc)}</span> abone</small></div>
           ${subBtn(v.user_id)}</div>
         <div class="acts"><div class="lk" id="lk"></div>
-          <button class="btn" onclick="share('${q1(v.title)}')">${I.share} Paylaş</button></div>
+          <button class="btn" onclick="share('${q1(displayTitle(v))}')">${I.share} Paylaş</button></div>
       </div>
-      <div class="desc">${c?`<span class="tp" style="cursor:pointer" onclick="catF=${c.id};typeF='all';go('home')">${c.emoji} ${esc(c.name)}</span>`:''}${v.topic?`<span class="tp">${esc(v.topic)}</span>`:''}${(c||v.topic)?'<br>':''}${esc(v.description||'Açıklama yok.')}</div>
+      ${needsRename(v) ? '' : `<div class="desc">${c?`<span class="tp" style="cursor:pointer" onclick="catF=${c.id};typeF='all';go('home')">${c.emoji} ${esc(c.name)}</span>`:''}${v.topic?`<span class="tp">${esc(v.topic)}</span>`:''}${(c||v.topic)?'<br>':''}${esc(v.description||'Açıklama yok.')}</div>`}
       <div class="comm">
         <h3 id="ch"></h3>
         <div id="crep" class="crep" style="display:none"></div>
@@ -562,7 +618,7 @@ async function videoPage(app, id){
       </div>
     </div>
     <aside class="side"><h3>Diğer videolar</h3>
-      ${(others||[]).map(o=>`<div class="rel" onclick="go('video',${o.id})">${thumbHtml(o)}<div class="vtxt"><div class="vt">${esc(o.title)}</div><div class="vm">@${esc(o.username)}<br>${fmt(o.views||0)} izlenme</div></div></div>`).join('') || '<div class="hint">Başka video yok.</div>'}
+      ${uniqueVideos(others||[]).map(o=>`<div class="rel" onclick="go('video',${o.id})">${thumbHtml(o)}<div class="vtxt"><div class="vt">${esc(displayTitle(o))}</div><div class="vm">@${esc(o.username)}<br>${fmt(o.views||0)} izlenme</div></div></div>`).join('') || '<div class="hint">Başka video yok.</div>'}
     </aside></div>`;
   $('#ci').addEventListener('keydown', e => { if(e.key==='Enter') sendComment(id); });
   attachMention($('#ci'));
@@ -835,11 +891,11 @@ async function channelPage(app, name){
   if(route.page!=='channel' || route.id!==name) return;
   if(p.avatar_url) avatarMap[p.username] = p.avatar_url; else delete avatarMap[p.username];
   const mine = me && me.id === p.id, h = hue(p.username);
-  window._chv = vids || []; window._chTab = 'video';
+  window._chv = uniqueVideos(vids || []); window._chTab = 'video';
   app.innerHTML = `<div class="banner" style="background:linear-gradient(135deg,hsl(${h} 80% 45%),hsl(${(h+50)%360} 80% 30%))"></div>
     <div class="chead">${av(p.username)}
       <div class="ci"><h1>@${esc(p.username)}</h1>
-        <div class="st"><span id="sc" data-n="${sc}">${fmt(sc)}</span> abone${me && me.id===p.id ? ` · <span id="fc">${fc}</span> abonelik` : ''} · ${(vids||[]).length} video</div></div>
+        <div class="st"><span id="sc" data-n="${sc}">${fmt(sc)}</span> abone${me && me.id===p.id ? ` · <span id="fc">${fc}</span> abonelik` : ''} · ${uniqueVideos(vids||[]).length} video</div></div>
       <div class="acts">${subBtn(p.id)}${mine?`<button class="btn" onclick="logout()">Çıkış yap</button>`:''}</div></div>
     ${mine ? settingsHtml(p)
       : (p.bio ? `<div class="bio">${esc(p.bio)}</div>` : '')}
@@ -1042,7 +1098,7 @@ async function uploadPage(app){
     <div class="field"><label>Kategori</label><select id="vcat"><option value="">Kategori seç</option>${cats.map(c=>`<option value="${c.id}">${c.emoji} ${esc(c.name)}</option>`).join('')}</select></div>
     <div class="field"><label>Konu (etiket)</label><input type="text" id="vc" maxlength="60" placeholder="Örn: Team Fortress 2"></div>
     <div class="field"><label>Açıklama</label><textarea id="vd" rows="4" maxlength="1000"></textarea></div>
-    <label class="sw"><input type="checkbox" id="vs"> Bu bir Short (dikey video)</label>
+    <div class="hint">Yatay videolar otomatik Shorts, dikey videolar normal video olarak sınıflandırılır.</div>
     <div class="hint">Supabase ücretsiz planda dosya başına limit 50 MB.</div>
     <div class="prog" id="pr"><i id="pb"></i></div>
     <div class="msg" id="msg"></div>
@@ -1072,12 +1128,26 @@ function makeThumb(file){
     setTimeout(()=>done(null),10000);
   });
 }
+function detectHorizontal(file){
+  return new Promise(resolve=>{
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    let finished = false;
+    const done = value => { if(finished) return; finished=true; URL.revokeObjectURL(url); resolve(value); };
+    video.preload='metadata';
+    video.onloadedmetadata=()=>done(video.videoWidth > video.videoHeight);
+    video.onerror=()=>done(false);
+    video.src=url;
+    setTimeout(()=>done(false),10000);
+  });
+}
 async function upload(){
   const f = $('#vf').files[0], title = $('#vt').value.trim();
   const isGif = !!f && (/gif$/i.test(f.type) || /\.gif$/i.test(f.name));
   if(!f) return msg('Bir video ya da GIF seç.');
   if(!title) return msg('Başlık yaz.');
   if(f.size > 50*1024*1024) return msg('Dosya 50 MB\'dan büyük.');
+  const isHorizontal = !isGif && await detectHorizontal(f);
   $('#ub').disabled = true; $('#pr').style.display='block'; $('#pb').style.width='20%';
   msg('Yükleniyor...',true);
   try{
@@ -1097,7 +1167,7 @@ async function upload(){
     const video_url = sb.storage.from('videos').getPublicUrl(vpath).data.publicUrl;
     if(isGif) thumb_url = video_url;
     const row = {user_id:me.id, username:myName, title, description:$('#vd').value.trim(),
-      topic:$('#vc').value.trim(), video_url, thumb_url, is_short:!isGif && $('#vs').checked, media_type:isGif?'gif':'video'};
+      topic:$('#vc').value.trim(), video_url, thumb_url, is_short:isHorizontal, media_type:isGif?'gif':'video'};
     const cv = $('#vcat').value; if(cv) row.category_id = +cv;
     const {data,error:e3} = await sb.from('videos').insert(row).select().single();
     if(e3) throw e3;
