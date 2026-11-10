@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="3;url=https://doruktube.lovable.app">
+<title>DorukTube - Taşındık!</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #250000, #c00000, #ed1717);
+    color: white;
+    font-family: "Segoe UI", Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.container {
+    padding: 25px;
+    animation: appear 1s ease;
+}
+
+.logo {
+    font-size: 45px;
+    font-weight: 900;
+    margin-bottom: 50px;
+}
+
+h1 {
+    font-size: clamp(30px, 6vw, 48px);
+}
+
+p {
+    font-size: 18px;
+    color: #ffe0e0;
+}
+
+.loader {
+    width: 45px;
+    height: 45px;
+    border: 4px solid #ffffff55;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 35px auto;
+}
+
+a {
+    color: white;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes appear {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="logo">DorukTube</div>
+
+    <h1>BAŞKA BİR SİTEYE TAŞINDIK!</h1>
+
+    <p>Yeni adresimize yönlendiriliyorsunuz...</p>
+
+    <div class="loader"></div>
+
+    <p>
+        Otomatik yönlendirme başlamazsa
+        <a href="https://doruktube.lovable.app">buraya tıklayın.</a>
+    </p>
+</div>
+
+<script>
+setTimeout(() => {
+    window.location.replace("https://doruktube.lovable.app");
+}, 3000);
+</script>
+
+</body>
+</html>
